@@ -1,3 +1,5 @@
+import { vi } from 'vitest';
+
 // Mock SpeechSynthesis
 if (typeof window !== 'undefined') {
   Object.defineProperty(window, 'speechSynthesis', {
