@@ -2,11 +2,21 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 const notifySchema = z.object({
-  emotion: z.string(),
-  riskLevel: z.enum(['low', 'medium', 'high']),
-  actionsTaken: z.array(z.string()),
-  location: z.string().url().optional(),
-  recipients: z.array(z.string()).min(1),
+  uid: z.string(),
+  contacts: z.array(z.object({
+    contactId: z.string().optional(),
+    name: z.string(),
+    phone: z.string(),
+    relationship: z.string(),
+    emergencyEnabled: z.boolean(),
+  })).min(1),
+  alert: z.object({
+    type: z.string(),
+    risk: z.string(),
+    emotion: z.string(),
+    details: z.string(),
+    timestamp: z.number(),
+  }),
 });
 
 export async function POST(request: Request) {
@@ -21,20 +31,21 @@ export async function POST(request: Request) {
       );
     }
 
-    const { emotion, riskLevel, actionsTaken, location, recipients } = result.data;
+    const { uid, contacts, alert } = result.data;
 
     // Simulate sending SMS via Twilio or standard gateway
-    console.log(`[SMS ALERTS SENT to: ${recipients.join(', ')}]`);
-    console.log(`Alert details: User is feeling "${emotion}" at a "${riskLevel}" risk level.`);
-    console.log(`Actions proposed:`, actionsTaken);
-    if (location) {
-      console.log(`Shared Location Link: ${location}`);
-    }
+    console.log(`\n=============================================`);
+    console.log(`[SMS GATEWAY DISPATCHER - SIMULATION]`);
+    contacts.forEach((contact) => {
+      console.log(`Sending SMS to: ${contact.name} at phone number ${contact.phone}...`);
+      console.log(`Content: "SAHO EMERGENCY ALERT: User is feeling "${alert.emotion}" at a "${alert.risk}" risk level. Guidance: ${alert.details}"`);
+    });
+    console.log(`=============================================\n`);
 
     return NextResponse.json({
       success: true,
       message: 'Emergency alerts successfully sent to caregivers.',
-      notifiedContactsCount: recipients.length
+      notifiedContactsCount: contacts.length
     });
   } catch (error: any) {
     console.error('Error in /api/caregiver/notify route:', error);
