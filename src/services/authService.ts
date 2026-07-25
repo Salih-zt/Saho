@@ -9,6 +9,7 @@ import {
   sendPasswordResetEmail,
   updateProfile
 } from 'firebase/auth';
+import { FirebaseError } from 'firebase/app';
 import { auth, isFirebaseConfigured } from './firebase/firebase';
 import { useAuthStore } from '../store/useAuthStore';
 import { UserProfile } from '../types';
@@ -34,7 +35,8 @@ export class AuthService {
         const synced = await UserService.syncUserProfile(profile);
         useAuthStore.getState().setUser(synced);
         return synced;
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const fbError = error as FirebaseError;
         console.error('Firebase Google Auth Sign-in failed:', error);
         throw error;
       }
@@ -63,15 +65,16 @@ export class AuthService {
         useAuthStore.getState().setUser(synced);
         useAuthStore.getState().setGuest(true);
         return synced;
-      } catch (error: any) {
-        if (error?.code === 'auth/admin-restricted-operation') {
+      } catch (error: unknown) {
+        const fbError = error as FirebaseError;
+        if (fbError?.code === 'auth/admin-restricted-operation') {
           console.warn(
             'Firebase Setup Required: Anonymous Authentication is currently disabled in your Firebase console.\n' +
             'To resolve this: Go to Firebase Console -> Authentication -> Sign-in method, and enable "Anonymous".\n' +
             'Reverting to fully functional Local Guest Mode in the meantime.'
           );
         } else {
-          console.error('Firebase guest signin failed, reverting to local guest mode:', error);
+          console.error('Firebase guest signin failed, reverting to local guest mode:', fbError?.message ?? error);
         }
       }
     }
@@ -114,7 +117,8 @@ export class AuthService {
         const synced = await UserService.syncUserProfile(profile);
         useAuthStore.getState().setUser(synced);
         return synced;
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const fbError = error as FirebaseError;
         console.error('Firebase Email sign-up failed:', error);
         throw error;
       }
@@ -142,7 +146,8 @@ export class AuthService {
         const synced = await UserService.syncUserProfile(profile);
         useAuthStore.getState().setUser(synced);
         return synced;
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const fbError = error as FirebaseError;
         console.error('Firebase Email sign-in failed:', error);
         throw error;
       }
@@ -158,7 +163,8 @@ export class AuthService {
     if (isFirebaseConfigured && auth) {
       try {
         await sendPasswordResetEmail(auth, email);
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const fbError = error as FirebaseError;
         console.error('Firebase Password reset request failed:', error);
         throw error;
       }
@@ -174,7 +180,8 @@ export class AuthService {
     if (isFirebaseConfigured && auth) {
       try {
         await signOut(auth);
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const fbError = error as FirebaseError;
         console.error('Firebase signout error:', error);
       }
     }

@@ -13,6 +13,27 @@ import {
   Flame, AlertTriangle, Users, Phone
 } from 'lucide-react';
 
+/** Ambient Web Speech API types (not in standard lib) */
+interface SpeechRecognitionEvent extends Event {
+  readonly resultIndex: number;
+  readonly results: SpeechRecognitionResultList;
+}
+interface SpeechRecognitionErrorEvent extends Event {
+  readonly error: string;
+  readonly message: string;
+}
+interface SpeechRecognitionInstance extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  onstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+}
+
 export default function SahoNowContainer() {
   const { currentVoiceSession, setVoiceSession } = useRecoveryStore();
   const { user } = useAuthStore();
@@ -34,15 +55,18 @@ export default function SahoNowContainer() {
   const [showContactsModal, setShowContactsModal] = useState(false);
   const { contacts } = useSettingsStore();
   
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   // Initialize Speech recognition
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
+      const SpeechRecognitionCtor: (new () => SpeechRecognitionInstance) | undefined =
+        (window as Window & { SpeechRecognition?: new () => SpeechRecognitionInstance; webkitSpeechRecognition?: new () => SpeechRecognitionInstance }).SpeechRecognition ||
+        (window as Window & { SpeechRecognition?: new () => SpeechRecognitionInstance; webkitSpeechRecognition?: new () => SpeechRecognitionInstance }).webkitSpeechRecognition;
+
+      if (SpeechRecognitionCtor) {
         setSpeechSupported(true);
-        const rec = new SpeechRecognition();
+        const rec = new SpeechRecognitionCtor();
         rec.continuous = false;
         rec.interimResults = true;
         rec.lang = 'en-US';
@@ -52,7 +76,7 @@ export default function SahoNowContainer() {
           setErrorMsg('');
         };
 
-        rec.onresult = (event: any) => {
+        rec.onresult = (event: SpeechRecognitionEvent) => {
           let currentText = '';
           for (let i = event.resultIndex; i < event.results.length; ++i) {
             currentText += event.results[i][0].transcript;
@@ -62,8 +86,8 @@ export default function SahoNowContainer() {
           }
         };
 
-        rec.onerror = (err: any) => {
-          console.error('Speech Recognition Error:', err);
+        rec.onerror = (err: SpeechRecognitionErrorEvent) => {
+          console.error('Speech Recognition Error:', err.error);
           if (err.error === 'not-allowed') {
             setErrorMsg('Microphone permission blocked. Please use direct cards selection.');
           } else {
