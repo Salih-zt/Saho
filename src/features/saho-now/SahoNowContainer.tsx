@@ -42,7 +42,7 @@ export default function SahoNowContainer() {
         setSpeechSupported(true);
         const rec = new SpeechRecognition();
         rec.continuous = false;
-        rec.interimResults = false;
+        rec.interimResults = true;
         rec.lang = 'en-US';
 
         rec.onstart = () => {
@@ -51,8 +51,13 @@ export default function SahoNowContainer() {
         };
 
         rec.onresult = (event: any) => {
-          const resultText = event.results[0][0].transcript;
-          setVoiceSession({ transcript: resultText });
+          let currentText = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            currentText += event.results[i][0].transcript;
+          }
+          if (currentText) {
+            setVoiceSession({ transcript: currentText });
+          }
         };
 
         rec.onerror = (err: any) => {
@@ -546,9 +551,9 @@ export default function SahoNowContainer() {
       </AnimatePresence>
 
       {/* Voice Spoken Words Banner */}
-      {currentVoiceSession.listening && currentVoiceSession.transcript && (
+      {(currentVoiceSession.listening || loading) && currentVoiceSession.transcript && (
         <div className="fixed bottom-24 left-4 right-4 p-3.5 bg-rose-50/90 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 text-xs font-semibold rounded-2xl border border-rose-100 dark:border-rose-900/60 max-w-sm mx-auto text-center shadow-md z-30">
-          Spoken: "{currentVoiceSession.transcript}"
+          {currentVoiceSession.listening ? 'Hearing:' : 'Sending to SAHO:'} "{currentVoiceSession.transcript}"
         </div>
       )}
 
