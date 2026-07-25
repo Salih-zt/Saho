@@ -25,8 +25,7 @@ export class TimelineService {
       const timelineRef = collection(db, 'timeline_entries');
       const q = query(
         timelineRef, 
-        where('uid', '==', uid), 
-        orderBy('createdAt', 'desc')
+        where('uid', '==', uid)
       );
       const querySnap = await getDocs(q);
 
@@ -42,6 +41,9 @@ export class TimelineService {
           type: data.type || 'reflection',
         });
       });
+
+      // Sort client-side by timestamp descending to avoid composite index requirements
+      entries.sort((a, b) => b.timestamp - a.timestamp);
       return entries;
     } catch (error) {
       console.error('Failed to fetch timeline entries from Firestore:', error);
