@@ -60,7 +60,7 @@ export class RecoveryService {
   }
 
   /**
-   * Sends AI-generated SOS emergency alert to caregivers
+   * Sends AI-generated SOS emergency alert to the first SOS-enabled caregiver
    */
   public static async notifyCaregivers(
     session: RecoverySession,
@@ -70,30 +70,32 @@ export class RecoveryService {
     const uid = user ? user.id : 'anonymous';
     
     const contacts = useSettingsStore.getState().contacts;
-    const enabledContacts = contacts.filter((c) => c.emergencyEnabled);
-    const sentNames: string[] = [];
 
-    if (enabledContacts.length === 0) {
+    // Only dispatch to the FIRST SOS-enabled contact in the saved list
+    const primaryContact = contacts.find((c) => c.emergencyEnabled);
+
+    if (!primaryContact) {
+      console.warn('[SAHO SOS] No SOS-enabled contact found. Emergency SMS not sent.');
       return { success: false, sentTo: [] };
     }
 
+    console.log(`[SAHO SOS] Dispatching emergency SMS to primary contact: ${primaryContact.name} (${primaryContact.phone})`);
+
     // Call CaregiverService to handle the server POST alert
-    const success = await CaregiverService.dispatchEmergencyNotification(uid, enabledContacts, {
+    const success = await CaregiverService.dispatchEmergencyNotification(uid, [primaryContact], {
       emotion: session.emotion,
       risk: session.riskLevel,
       responseMessage: session.message,
     });
 
-    enabledContacts.forEach((c) => sentNames.push(c.name));
-
     // Add a timeline log of alert triggered
     await TimelineService.addTimelineEntry(
       uid,
       'Circle of Safety Alerted',
-      `Dispatched emergency guidance SMS to ${sentNames.join(', ')}.`,
+      `Dispatched emergency guidance SMS to ${primaryContact.name} (${primaryContact.relationship}).`,
       'contact'
     );
 
-    return { success, sentTo: sentNames };
+    return { success, sentTo: [primaryContact.name] };
   }
 }

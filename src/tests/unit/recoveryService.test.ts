@@ -172,21 +172,21 @@ describe('Caregiver SMS Dispatch Payload', () => {
     expect(typeof payload.alert.timestamp).toBe('number');
   });
 
-  it('should filter out contacts with emergencyEnabled = false', () => {
+  it('should select only the FIRST SOS-enabled contact for dispatch', () => {
     const allContacts = [
       { name: 'Alice', phone: '+1111', relationship: 'Mom', emergencyEnabled: true, contactId: 'c1' },
-      { name: 'Bob',   phone: '+2222', relationship: 'Dad', emergencyEnabled: false, contactId: 'c2' },
+      { name: 'Bob',   phone: '+2222', relationship: 'Dad', emergencyEnabled: true, contactId: 'c2' },
     ];
-    const enabled = allContacts.filter(c => c.emergencyEnabled);
-    expect(enabled.length).toBe(1);
-    expect(enabled[0].name).toBe('Alice');
+    // Mirrors contacts.find((c) => c.emergencyEnabled)
+    const primary = allContacts.find(c => c.emergencyEnabled);
+    expect(primary?.name).toBe('Alice');
   });
 
   it('should return empty dispatch list when no contacts have SOS enabled', () => {
     const allContacts = [
       { name: 'Alice', phone: '+1111', relationship: 'Mom', emergencyEnabled: false, contactId: 'c1' },
     ];
-    const enabled = allContacts.filter(c => c.emergencyEnabled);
-    expect(enabled.length).toBe(0);
+    const primary = allContacts.find(c => c.emergencyEnabled);
+    expect(primary).toBeUndefined();
   });
 });
