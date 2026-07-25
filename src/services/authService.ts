@@ -1,9 +1,36 @@
-import { signInAnonymously, signOut, UserCredential } from 'firebase/auth';
+import { signInAnonymously, signOut, UserCredential, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from './firebase/firebase';
 import { useAuthStore } from '../store/useAuthStore';
 import { UserProfile } from '../types';
 
 export class AuthService {
+  /**
+   * Google Sign In Authentication
+   */
+  public static async signInWithGoogle(): Promise<UserProfile> {
+    if (isFirebaseConfigured && auth) {
+      try {
+        const provider = new GoogleAuthProvider();
+        const creds = await signInWithPopup(auth, provider);
+        const profile: UserProfile = {
+          id: creds.user.uid,
+          displayName: creds.user.displayName || 'Google Companion',
+          email: creds.user.email,
+          recoveryGoals: ['Maintain Sobriety', 'Daily Breathing', 'Google Sync Active'],
+          isGuest: false,
+          createdAt: Date.now(),
+        };
+        useAuthStore.getState().setUser(profile);
+        return profile;
+      } catch (error) {
+        console.error('Firebase Google Auth Sign-in failed:', error);
+        throw error;
+      }
+    }
+
+    // Local simulated Google authentication
+    return this.loginWithEmail('google-auth@gmail.com', 'Google Companion Account');
+  }
   /**
    * Signs in a user anonymously for quick emergency access
    */
