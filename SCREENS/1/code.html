@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SAHO - Splash Screen</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#a3f69c",
+                        "primary-container": "#1a237e",
+                        "tertiary-fixed": "#ffdcc2",
+                        "on-tertiary-container": "#e17e00",
+                        "surface-container-low": "#f3f4f5",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-surface": "#191c1d",
+                        "secondary-fixed-dim": "#88d982",
+                        "background": "#f8f9fa",
+                        "on-surface-variant": "#454652",
+                        "surface-container-high": "#e7e8e9",
+                        "on-secondary-fixed-variant": "#005312",
+                        "surface-bright": "#f8f9fa",
+                        "primary-fixed": "#e0e0ff",
+                        "surface-container": "#edeeef",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb77a",
+                        "tertiary-container": "#4b2600",
+                        "primary": "#000666",
+                        "secondary": "#1b6d24",
+                        "surface-tint": "#4c56af",
+                        "on-primary-fixed-variant": "#343d96",
+                        "on-primary-fixed": "#000767",
+                        "on-tertiary-fixed": "#2e1500",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#6d3a00",
+                        "error": "#ba1a1a",
+                        "outline": "#767683",
+                        "on-background": "#191c1d",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-container": "#8690ee",
+                        "on-secondary-fixed": "#002204",
+                        "inverse-primary": "#bdc2ff",
+                        "on-secondary-container": "#217128",
+                        "surface-variant": "#e1e3e4",
+                        "outline-variant": "#c6c5d4",
+                        "tertiary": "#2d1400",
+                        "error-container": "#ffdad6",
+                        "surface-dim": "#d9dadb",
+                        "inverse-surface": "#2e3132",
+                        "primary-fixed-dim": "#bdc2ff",
+                        "inverse-on-surface": "#f0f1f2",
+                        "surface": "#f8f9fa",
+                        "on-error-container": "#93000a",
+                        "on-primary": "#ffffff",
+                        "secondary-container": "#a0f399"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "sm": "12px",
+                        "md": "24px",
+                        "touch-target-min": "48px",
+                        "lg": "40px",
+                        "xs": "4px",
+                        "container-padding": "20px",
+                        "xl": "64px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "label-md": ["Inter"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "headline-xl": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "600"}],
+                        "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        .fade-in {
+            animation: fadeIn 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .slide-up {
+            animation: slideUp 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .slow-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Glassmorphism utility */
+        .glass {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background overflow-hidden h-screen w-full flex items-center justify-center">
+<!-- Ambient Gradient Background -->
+<div class="fixed inset-0 z-0 bg-gradient-to-br from-background via-white to-primary-fixed/30"></div>
+<!-- Animated Atmospheric Shader Layer -->
+<div class="fixed inset-0 z-10 opacity-40 mix-blend-soft-light">
+
+</div>
+<!-- Main Content Canvas -->
+<main class="relative z-20 flex flex-col items-center justify-center max-w-[600px] w-full px-md text-center">
+<!-- Calming Illustration (Sunrise / Hands) -->
+<div class="mb-xl slow-float">
+<div class="relative w-64 h-64 md:w-80 md:h-80 mx-auto rounded-full overflow-hidden flex items-center justify-center shadow-2xl shadow-primary/5">
+<img class="w-full h-full object-cover" data-alt="A hyper-minimalist and premium digital illustration of a soft, hazy sunrise over a calm ocean. The colors transition from a gentle off-white to a very pale, soothing deep blue. Two abstract, organic shapes resembling supportive hands are subtly integrated into the horizon line. The lighting is ethereal and high-key, evoking a sense of profound peace, recovery, and a quiet, steady hand of support. The overall aesthetic is clean, modernist, and emotionally safe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKIE3n_Obf_9WHnGDC3cZftzwwN08MuEIlROoLtZy4-5eBXSuryEmKYisslkqVT1CGtF35gG21qzzMoOpSUrlegfQsQkj9Y6wyFiRTEB_yZbcQ3EF053au9W8q6K6kpYFZzCEqhXHAZEVN9e-BAh4psuvlJUlzBh85lhlzL2xL3-B-hwbrxwnHlbP-L5xKP9DIdoZELCApZdpbvRPgvEAS0b6I53jqiYCDNxLPS2d5nRaXXcW8h8F-7h7HU01H4yjc7Ij2CJiH23c"/>
+<!-- Inner Glow Overlay -->
+<div class="absolute inset-0 bg-gradient-to-t from-white/40 to-transparent pointer-events-none"></div>
+</div>
+</div>
+<!-- Logo & Brand Identity -->
+<div class="slide-up space-y-sm">
+<!-- Abstract 'Brother' Symbol Logo Mark -->
+<div class="flex justify-center mb-base">
+<div class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-lg transform rotate-45">
+<span class="material-symbols-outlined text-white text-[32px] -rotate-45" style="font-variation-settings: 'FILL' 1;">
+                        diversity_1
+                    </span>
+</div>
+</div>
+<!-- Brand Name -->
+<h1 class="font-headline-xl text-headline-xl text-primary tracking-tight">
+                SAHO
+            </h1>
+<!-- Tagline -->
+<p class="font-body-lg text-body-lg text-on-surface-variant font-medium tracking-wide">
+                Your brother through recovery.
+            </p>
+</div>
+<!-- Progress/Loading Indicator (Subtle) -->
+<div class="mt-xl w-16 h-[4px] bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full slide-progress w-full" style="animation: progress 3s ease-in-out infinite;"></div>
+</div>
+<p class="mt-md font-label-sm text-label-sm text-outline opacity-60">
+            Finding your steady hand...
+        </p>
+</main>
+<!-- Interactive Atmospheric Elements -->
+<script>
+        // Micro-interaction for mouse movement to shift background subtly
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            
+            const mainContent = document.querySelector('main');
+            if (mainContent) {
+                const moveX = (x - 0.5) * 15;
+                const moveY = (y - 0.5) * 15;
+                mainContent.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            }
+        });
+
+        // Keyframe for the subtle progress bar animation
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes progress {
+                0% { transform: translateX(-100%); }
+                50% { transform: translateX(0%); }
+                100% { transform: translateX(100%); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body></html>

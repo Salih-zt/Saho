@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SAHO - Guided Breathing</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed": "#a3f69c",
+                    "primary-container": "#1a237e",
+                    "tertiary-fixed": "#ffdcc2",
+                    "on-tertiary-container": "#e17e00",
+                    "surface-container-low": "#f3f4f5",
+                    "on-secondary": "#ffffff",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-surface": "#191c1d",
+                    "secondary-fixed-dim": "#88d982",
+                    "background": "#000666", /* Custom override for rich navy context */
+                    "on-surface-variant": "#454652",
+                    "surface-container-high": "#e7e8e9",
+                    "on-secondary-fixed-variant": "#005312",
+                    "surface-bright": "#f8f9fa",
+                    "primary-fixed": "#e0e0ff",
+                    "surface-container": "#edeeef",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb77a",
+                    "tertiary-container": "#4b2600",
+                    "primary": "#bdc2ff",
+                    "secondary": "#1b6d24",
+                    "surface-tint": "#4c56af",
+                    "on-primary-fixed-variant": "#343d96",
+                    "on-primary-fixed": "#000767",
+                    "on-tertiary-fixed": "#2e1500",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#6d3a00",
+                    "error": "#ba1a1a",
+                    "outline": "#767683",
+                    "on-background": "#f0f1f2",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-container": "#8690ee",
+                    "on-secondary-fixed": "#002204",
+                    "inverse-primary": "#bdc2ff",
+                    "on-secondary-container": "#217128",
+                    "surface-variant": "#e1e3e4",
+                    "outline-variant": "#c6c5d4",
+                    "tertiary": "#2d1400",
+                    "error-container": "#ffdad6",
+                    "surface-dim": "#d9dadb",
+                    "inverse-surface": "#2e3132",
+                    "primary-fixed-dim": "#bdc2ff",
+                    "inverse-on-surface": "#f0f1f2",
+                    "surface": "#000666",
+                    "on-error-container": "#93000a",
+                    "on-primary": "#ffffff",
+                    "secondary-container": "#a0f399"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "sm": "12px",
+                    "md": "24px",
+                    "touch-target-min": "48px",
+                    "lg": "40px",
+                    "xs": "4px",
+                    "container-padding": "20px",
+                    "xl": "64px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "label-md": ["Inter"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "headline-xl": ["Plus Jakarta Sans"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "600"}],
+                    "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #000666;
+            margin: 0;
+            overflow: hidden;
+            color: #f0f1f2;
+        }
+
+        .breathing-circle {
+            transition: transform 4s cubic-bezier(0.45, 0.05, 0.55, 0.95), opacity 4s ease-in-out;
+            box-shadow: 0 0 100px rgba(160, 243, 153, 0.2);
+        }
+
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        .ambient-glow {
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            background: radial-gradient(circle at center, rgba(26, 35, 126, 0.4) 0%, transparent 70%);
+            animation: pulse-slow 8s infinite alternate;
+            z-index: 0;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex flex-col items-center justify-between min-h-screen p-md font-body-md text-on-background selection:bg-primary-container">
+<!-- Ambient Background Layer -->
+<div class="ambient-glow"></div>
+<!-- Top Status / Branding (Minimal) -->
+<header class="z-10 w-full max-w-lg flex justify-between items-center opacity-40 hover:opacity-100 transition-opacity duration-500">
+<div class="flex flex-col">
+<span class="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tight">SAHO</span>
+<span class="font-label-sm text-label-sm tracking-widest uppercase opacity-60">Focus • Peace</span>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full glass-btn transition-transform active:scale-90">
+<span class="material-symbols-outlined">volume_up</span>
+</button>
+</header>
+<!-- Main Content: Breathing Center -->
+<main class="relative flex flex-col items-center justify-center flex-grow w-full max-w-lg z-10">
+<!-- Timer Display -->
+<div class="absolute top-0 text-center mb-xl">
+<h2 class="font-headline-xl text-headline-xl font-light tracking-tighter opacity-80" id="timer-display">04:00</h2>
+<p class="font-label-md text-label-md opacity-40 uppercase tracking-widest mt-xs">Time Remaining</p>
+</div>
+<!-- The Breathing Core -->
+<div class="relative flex items-center justify-center">
+<!-- Secondary Expanding Ring -->
+<div class="absolute w-[340px] h-[340px] rounded-full border border-secondary/20 scale-100 transition-transform duration-[4000ms] ease-in-out" id="ring-outer"></div>
+<!-- Primary Pulse Circle -->
+<div class="w-64 h-64 rounded-full bg-gradient-to-tr from-secondary to-primary-container flex items-center justify-center breathing-circle transform scale-100 shadow-2xl relative" id="breathing-orb">
+<!-- Inner Glow -->
+<div class="absolute inset-0 rounded-full bg-white/10 blur-xl"></div>
+<!-- Interaction Text -->
+<p class="text-white font-headline-lg-mobile text-headline-lg-mobile font-medium tracking-tight z-10 drop-shadow-md" id="instruction-text">
+                    Ready?
+                </p>
+</div>
+</div>
+<!-- Breath Progress Visualization -->
+<div class="mt-xl w-32 flex justify-between gap-xs opacity-30">
+<div class="h-1 flex-1 bg-white rounded-full"></div>
+<div class="h-1 flex-1 bg-white/20 rounded-full"></div>
+<div class="h-1 flex-1 bg-white/20 rounded-full"></div>
+<div class="h-1 flex-1 bg-white/20 rounded-full"></div>
+</div>
+</main>
+<!-- Bottom Action -->
+<footer class="z-10 w-full max-w-lg flex flex-col items-center pb-xl">
+<button class="glass-btn px-xl py-md rounded-full font-label-md text-label-md text-on-background/80 hover:text-on-background hover:bg-white/10 transition-all active:scale-95" onclick="window.location.reload()">
+            End Session
+        </button>
+<p class="mt-md font-label-sm text-label-sm opacity-30">Tap to gracefully exit</p>
+</footer>
+<!-- Meditation Logic -->
+<script>
+        const orb = document.getElementById('breathing-orb');
+        const ring = document.getElementById('ring-outer');
+        const instruction = document.getElementById('instruction-text');
+        const timerDisplay = document.getElementById('timer-display');
+        
+        let phase = 0; // 0: In, 1: Hold, 2: Out, 3: Hold
+        let timeLeft = 240; // 4 minutes
+
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            if (timeLeft > 0) timeLeft--;
+        }
+
+        function runBreathingCycle() {
+            const phases = [
+                { text: "Breathe in...", scale: 1.4, duration: 4000, ringScale: 1.6 },
+                { text: "Hold...", scale: 1.4, duration: 4000, ringScale: 1.7 },
+                { text: "Breathe out...", scale: 1.0, duration: 4000, ringScale: 1.1 },
+                { text: "Hold...", scale: 1.0, duration: 4000, ringScale: 1.0 }
+            ];
+
+            const current = phases[phase];
+            
+            instruction.style.opacity = 0;
+            
+            setTimeout(() => {
+                instruction.textContent = current.text;
+                instruction.style.opacity = 1;
+                orb.style.transform = `scale(${current.scale})`;
+                ring.style.transform = `scale(${current.ringScale})`;
+                ring.style.opacity = phase === 1 ? '0.6' : '0.2';
+            }, 300);
+
+            setTimeout(() => {
+                phase = (phase + 1) % 4;
+                runBreathingCycle();
+            }, current.duration);
+        }
+
+        // Initialize
+        setInterval(updateTimer, 1000);
+        
+        // Start after a small delay for immersion
+        setTimeout(() => {
+            runBreathingCycle();
+        }, 1500);
+
+        // Simple subtle interaction
+        document.body.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 20;
+            const y = (e.clientY / window.innerHeight - 0.5) * 20;
+            orb.style.left = `${x}px`;
+            orb.style.top = `${y}px`;
+        });
+    </script>
+</body></html>

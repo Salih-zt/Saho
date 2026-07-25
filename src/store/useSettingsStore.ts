@@ -6,11 +6,14 @@ interface SettingsState {
   theme: 'light' | 'dark';
   accessibility: AccessibilityPreferences;
   contacts: CaregiverContact[];
+  onboardingCompleted: boolean;
   toggleTheme: () => void;
   updateAccessibility: (prefs: Partial<AccessibilityPreferences>) => void;
   addContact: (contact: CaregiverContact) => void;
   removeContact: (contactId: string) => void;
   updateContact: (contact: CaregiverContact) => void;
+  completeOnboarding: () => void;
+  resetOnboarding: () => void;
 }
 
 const defaultAccessibility: AccessibilityPreferences = {
@@ -43,6 +46,7 @@ export const useSettingsStore = create<SettingsState>()(
       theme: 'light',
       accessibility: defaultAccessibility,
       contacts: defaultContacts,
+      onboardingCompleted: false,
       toggleTheme: () =>
         set((state) => ({
           theme: state.theme === 'light' ? 'dark' : 'light',
@@ -65,6 +69,8 @@ export const useSettingsStore = create<SettingsState>()(
             c.contactId === updated.contactId ? updated : c
           ),
         })),
+      completeOnboarding: () => set({ onboardingCompleted: true }),
+      resetOnboarding: () => set({ onboardingCompleted: false }),
     }),
     {
       name: 'saho-settings',

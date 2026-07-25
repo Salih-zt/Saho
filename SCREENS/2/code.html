@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SAHO - The Steady Hand</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&display=swap" rel="stylesheet"/>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed": "#a3f69c",
+                    "primary-container": "#1a237e",
+                    "tertiary-fixed": "#ffdcc2",
+                    "on-tertiary-container": "#e17e00",
+                    "surface-container-low": "#f3f4f5",
+                    "on-secondary": "#ffffff",
+                    "surface-container-highest": "#e1e3e4",
+                    "on-surface": "#191c1d",
+                    "secondary-fixed-dim": "#88d982",
+                    "background": "#f8f9fa",
+                    "on-surface-variant": "#454652",
+                    "surface-container-high": "#e7e8e9",
+                    "on-secondary-fixed-variant": "#005312",
+                    "surface-bright": "#f8f9fa",
+                    "primary-fixed": "#e0e0ff",
+                    "surface-container": "#edeeef",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb77a",
+                    "tertiary-container": "#4b2600",
+                    "primary": "#000666",
+                    "secondary": "#1b6d24",
+                    "surface-tint": "#4c56af",
+                    "on-primary-fixed-variant": "#343d96",
+                    "on-primary-fixed": "#000767",
+                    "on-tertiary-fixed": "#2e1500",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#6d3a00",
+                    "error": "#ba1a1a",
+                    "outline": "#767683",
+                    "on-background": "#191c1d",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-container": "#8690ee",
+                    "on-secondary-fixed": "#002204",
+                    "inverse-primary": "#bdc2ff",
+                    "on-secondary-container": "#217128",
+                    "surface-variant": "#e1e3e4",
+                    "outline-variant": "#c6c5d4",
+                    "tertiary": "#2d1400",
+                    "error-container": "#ffdad6",
+                    "surface-dim": "#d9dadb",
+                    "inverse-surface": "#2e3132",
+                    "primary-fixed-dim": "#bdc2ff",
+                    "inverse-on-surface": "#f0f1f2",
+                    "surface": "#f8f9fa",
+                    "on-error-container": "#93000a",
+                    "on-primary": "#ffffff",
+                    "secondary-container": "#a0f399"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "sm": "12px",
+                    "md": "24px",
+                    "touch-target-min": "48px",
+                    "lg": "40px",
+                    "xs": "4px",
+                    "container-padding": "20px",
+                    "xl": "64px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "label-md": ["Inter"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "headline-xl": ["Plus Jakarta Sans"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "600"}],
+                    "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        @keyframes aura-pulse {
+            0% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.15); opacity: 0.15; }
+            100% { transform: scale(1); opacity: 0.3; }
+        }
+
+        .aura-animation {
+            animation: aura-pulse 4s ease-in-out infinite;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .blue-emerald-gradient {
+            background: linear-gradient(15deg, #1a237e 0%, #1b6d24 100%);
+        }
+
+        body {
+            background-color: #f8f9fa;
+            color: #191c1d;
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-on-surface select-none">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-padding h-touch-target-min backdrop-blur-xl bg-background/80">
+<div class="flex items-center gap-base">
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant bg-surface-container-high">
+<img class="w-full h-full object-cover" data-alt="A professional and warm studio portrait of a supportive individual in their late 20s, with a gentle and reliable expression. The lighting is soft and natural, utilizing a high-key light mode aesthetic with soft off-white backgrounds that align with a premium health and wellness app's visual identity. The overall mood is one of quiet strength and emotional safety." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHSaDkNnBmHSvXfsTdNYAH8KLC7RuOAQGmxcxYJT_p-RUt3pw-lXQveaPd9nJBq7zKDWanyXB3aS5KQyHwRX9XOFnfNC2jCMqMw3edt_h55F9PceLGNw71tiC4X0Bt0dCiQiZuE6qkAK_SeBMbmTTqeU5zsxgXEW9mzxfrkvtKt78y19qxozZNayqlgMvEFTqmWa6dibZ5AHuTfRWhE89kR0VbphdgTwazaJraXRdFseSPmqk8bHGEgsMoEt2TR06V2kh_uegptA0"/>
+</div>
+<span class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">SAHO</span>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:opacity-80 transition-opacity scale-95 active:scale-90 transition-transform">
+            settings
+        </button>
+</header>
+<main class="min-h-screen pt-xl pb-32 px-container-padding max-w-[600px] mx-auto flex flex-col items-center justify-center space-y-xl">
+<!-- Hero Section -->
+<div class="text-center space-y-xs">
+<h2 class="font-body-lg text-body-lg text-on-surface-variant">Hello Alex, I'm here.</h2>
+</div>
+<!-- Central Feature Button -->
+<div class="relative flex items-center justify-center">
+<!-- Breathing Aura -->
+<div class="absolute w-72 h-72 bg-primary/20 rounded-full blur-3xl aura-animation"></div>
+<div class="absolute w-64 h-64 bg-secondary/15 rounded-full blur-2xl aura-animation" style="animation-delay: -2s;"></div>
+<!-- Main CTA -->
+<button class="relative z-10 w-64 h-64 rounded-full blue-emerald-gradient shadow-[0px_20px_40px_rgba(26,35,126,0.2)] flex flex-col items-center justify-center text-white hover:scale-105 active:scale-95 transition-transform duration-500 ease-out">
+<span class="font-headline-xl text-[28px] font-extrabold tracking-tight">SAHO NOW</span>
+<span class="font-body-md text-white/80 mt-2">Need your brother?</span>
+</button>
+</div>
+<!-- Emotional Grid (Quick Cards) -->
+<div class="w-full grid grid-cols-2 gap-md pt-lg">
+<!-- I'm Craving -->
+<button class="glass-card p-md rounded-xl text-left border border-white/40 shadow-sm flex flex-col justify-between h-32 hover:bg-white transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[#e17e00] text-[32px]">restaurant</span>
+<span class="font-label-md text-label-md text-on-surface">I'm Craving</span>
+</button>
+<!-- I'm Panicking -->
+<button class="glass-card p-md rounded-xl text-left border border-white/40 shadow-sm flex flex-col justify-between h-32 hover:bg-white transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-error text-[32px]">warning</span>
+<span class="font-label-md text-label-md text-on-surface">I'm Panicking</span>
+</button>
+<!-- I'm Lonely -->
+<button class="glass-card p-md rounded-xl text-left border border-white/40 shadow-sm flex flex-col justify-between h-32 hover:bg-white transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary text-[32px]">diversity_1</span>
+<span class="font-label-md text-label-md text-on-surface">I'm Lonely</span>
+</button>
+<!-- Just Speak (Icon Only Focus) -->
+<button class="glass-card p-md rounded-xl border border-white/40 shadow-sm flex items-center justify-center h-32 hover:bg-white transition-colors active:scale-95 transition-transform">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface text-[32px]">mic</span>
+</div>
+</button>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 backdrop-blur-2xl bg-surface-container-lowest/70 rounded-t-xl shadow-lg">
+<!-- Home (Active) -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 Active: scale-95 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<!-- History -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high/50 transition-colors rounded-xl px-4 py-1" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-label-sm text-label-sm">History</span>
+</a>
+<!-- Library -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high/50 transition-colors rounded-xl px-4 py-1" href="#">
+<span class="material-symbols-outlined">library_books</span>
+<span class="font-label-sm text-label-sm">Library</span>
+</a>
+<!-- Safety -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high/50 transition-colors rounded-xl px-4 py-1" href="#">
+<span class="material-symbols-outlined">emergency_home</span>
+<span class="font-label-sm text-label-sm">Safety</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high/50 transition-colors rounded-xl px-4 py-1" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</a>
+</nav>
+<script>
+        // Micro-interactions for the central button
+        const mainButton = document.querySelector('.blue-emerald-gradient');
+        
+        mainButton.addEventListener('touchstart', () => {
+            mainButton.classList.add('scale-90');
+        });
+
+        mainButton.addEventListener('touchend', () => {
+            mainButton.classList.remove('scale-90');
+        });
+
+        // Background subtle parallax effect
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            
+            const auras = document.querySelectorAll('.aura-animation');
+            auras.forEach((aura, index) => {
+                const speed = (index + 1) * 20;
+                aura.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
+            });
+        });
+    </script>
+</body></html>

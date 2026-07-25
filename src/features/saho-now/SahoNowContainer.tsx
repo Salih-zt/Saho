@@ -9,14 +9,9 @@ import { RecoveryService } from '../../services/recoveryService';
 import { PulseAIResponse } from '../../types';
 import { 
   Mic, AlertCircle, RefreshCw, CheckCircle2, 
-  Wind, ShieldAlert, Heart, Volume2, VolumeX, Sparkles, X
+  Wind, ShieldAlert, Heart, Volume2, VolumeX, Sparkles, X,
+  Utensils, AlertTriangle, Users
 } from 'lucide-react';
-
-const EMOTIONAL_CARDS = [
-  { id: 'craving', label: "I'm Craving", icon: 'cookie', color: 'text-amber-500', bg: 'bg-amber-50/40 dark:bg-amber-950/20' },
-  { id: 'panic', label: "I'm Panicking", icon: 'warning', color: 'text-error', bg: 'bg-rose-50/40 dark:bg-rose-950/20' },
-  { id: 'lonely', label: "I'm Lonely", icon: 'diversity_1', color: 'text-primary dark:text-on-primary-container', bg: 'bg-blue-50/40 dark:bg-blue-950/20' },
-];
 
 export default function SahoNowContainer() {
   const { currentVoiceSession, setVoiceSession } = useRecoveryStore();
@@ -276,7 +271,7 @@ export default function SahoNowContainer() {
                 <img 
                   className="w-full h-full object-cover" 
                   alt="Companion guide" 
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHSaDkNnBmHSvXfsTdNYAH8KLC7RuOAQGmxcxYJT_p-RUt3pw-lXQveaPd9nJBq7zKDWanyXB3aS5KQyHwRX9XOFnfNC2jCMqMw3edt_h55F9PceLGNw71tiC4X0Bt0dCiQiZuE6qkAK_SeBMbmTTqeU5zsxgXEW9mzxfrkvtKt78y19qxozZNayqlgMvEFTqmWa6dibZ5AHuTfRWhE89kR0VbphdgTwazaJraXRdFseSPmqk8bHGEgsMoEt2TR06V2kh_uegptA0"
+                  src="/profile_placeholder.png"
                 />
               </div>
               <h2 className="font-heading font-semibold text-lg text-primary dark:text-secondary-fixed">
@@ -300,26 +295,45 @@ export default function SahoNowContainer() {
               </button>
             </div>
 
-            {/* Touch Selection Cards */}
-            <div className="w-full space-y-2.5 pt-4">
-              <p className="text-xs uppercase font-extrabold tracking-widest text-on-surface-variant/60 text-left px-1">
-                Choose a direct state card:
-              </p>
-              
-              <div className="grid grid-cols-3 gap-3 w-full">
-                {EMOTIONAL_CARDS.map((card) => (
-                  <button
-                    key={card.id}
-                    onClick={() => handleProcessInput(card.label)}
-                    className="glass p-4 rounded-3xl text-center shadow-[0px_10px_30px_rgba(26,35,126,0.02)] flex flex-col items-center justify-center gap-2 border border-white/40 hover:bg-white/60 dark:hover:bg-slate-800 transition active:scale-95 cursor-pointer h-24"
-                  >
-                    <span className={`material-symbols-outlined text-[28px] ${card.color}`}>
-                      {card.icon === 'cookie' ? 'cookie' : card.icon === 'warning' ? 'warning' : 'diversity_1'}
-                    </span>
-                    <span className="font-heading text-xs font-bold text-on-surface">{card.label}</span>
-                  </button>
-                ))}
-              </div>
+            {/* Touch Selection Cards (2x2 Grid) */}
+            <div className="w-full grid grid-cols-2 gap-4 pt-4">
+              {/* I'm Craving */}
+              <button
+                onClick={() => handleProcessInput("I'm Craving")}
+                className="bg-card hover:bg-slate-50 dark:hover:bg-slate-800/40 p-5 rounded-[24px] border border-outline-variant/60 shadow-[0px_10px_30px_rgba(26,35,126,0.02)] flex flex-col justify-between h-32 hover:bg-white transition-all active:scale-95 cursor-pointer text-left"
+              >
+                <Utensils className="w-8 h-8 text-[#e17e00] stroke-[1.75px]" />
+                <span className="font-heading text-sm font-bold text-on-surface">I'm Craving</span>
+              </button>
+
+              {/* I'm Panicking */}
+              <button
+                onClick={() => handleProcessInput("I'm Panicking")}
+                className="bg-card hover:bg-slate-50 dark:hover:bg-slate-800/40 p-5 rounded-[24px] border border-outline-variant/60 shadow-[0px_10px_30px_rgba(26,35,126,0.02)] flex flex-col justify-between h-32 hover:bg-white transition-all active:scale-95 cursor-pointer text-left"
+              >
+                <AlertTriangle className="w-8 h-8 text-error stroke-[1.75px]" />
+                <span className="font-heading text-sm font-bold text-on-surface">I'm Panicking</span>
+              </button>
+
+              {/* I'm Lonely */}
+              <button
+                onClick={() => handleProcessInput("I'm Lonely")}
+                className="bg-card hover:bg-slate-50 dark:hover:bg-slate-800/40 p-5 rounded-[24px] border border-outline-variant/60 shadow-[0px_10px_30px_rgba(26,35,126,0.02)] flex flex-col justify-between h-32 hover:bg-white transition-all active:scale-95 cursor-pointer text-left"
+              >
+                <Users className="w-8 h-8 text-primary dark:text-secondary-light stroke-[1.75px]" />
+                <span className="font-heading text-sm font-bold text-on-surface">I'm Lonely</span>
+              </button>
+
+              {/* Just Speak (Mic button card) */}
+              <button
+                onClick={toggleListening}
+                className="bg-card hover:bg-slate-50 dark:hover:bg-slate-800/40 p-5 rounded-[24px] border border-outline-variant/60 shadow-[0px_10px_30px_rgba(26,35,126,0.02)] flex items-center justify-center h-32 hover:bg-white transition-all active:scale-95 cursor-pointer"
+                aria-label="Tap to speak"
+              >
+                <div className="w-14 h-14 rounded-full bg-surface-container-high dark:bg-slate-700 flex items-center justify-center shadow-inner hover:scale-105 active:scale-95 transition-transform duration-200">
+                  <Mic className="w-6 h-6 text-on-surface stroke-[2.25px]" />
+                </div>
+              </button>
             </div>
           </motion.div>
         )}
