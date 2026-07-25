@@ -153,11 +153,6 @@ export default function SahoNowContainer() {
         emergencyTriggered: data.emergency,
       });
 
-      if (data.breathing) {
-        setBreathingActive(true);
-        setTimerCount(240);
-      }
-
       if (data.emergency) {
         await RecoveryService.notifyCaregivers(saved);
       }
@@ -168,10 +163,6 @@ export default function SahoNowContainer() {
       setAiResponse(fallback);
       setCheckedActions([false, false, false]);
       speakText(fallback.message);
-      if (fallback.breathing) {
-        setBreathingActive(true);
-        setTimerCount(240);
-      }
     } finally {
       setLoading(false);
     }
