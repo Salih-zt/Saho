@@ -373,21 +373,22 @@ export default function CircleOfSafetyContainer() {
 
         {/* Add Contact Form */}
         {contacts.length < 5 && (
-          <form onSubmit={handleAddContact} className="pt-3 border-t border-outline-variant/40 space-y-2">
+          <form onSubmit={handleAddContact} className="glass p-4 rounded-[20px] space-y-3 mt-4 text-left">
+            <p className="text-[10px] uppercase font-extrabold tracking-wider text-muted-foreground">Add New Contact</p>
             <div className="grid grid-cols-2 gap-2">
               <input
                 type="text"
                 placeholder="Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="h-10 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-outline-variant rounded-xl text-xs focus:border-primary focus:outline-none"
+                className="h-10 px-3.5 bg-transparent border border-outline-variant/65 rounded-xl text-xs focus:border-primary focus:outline-none text-foreground"
               />
               <input
                 type="text"
                 placeholder="Relation (e.g. Brother)"
                 value={relationship}
                 onChange={(e) => setRelationship(e.target.value)}
-                className="h-10 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-outline-variant rounded-xl text-xs focus:border-primary focus:outline-none"
+                className="h-10 px-3.5 bg-transparent border border-outline-variant/65 rounded-xl text-xs focus:border-primary focus:outline-none text-foreground"
               />
             </div>
             <div className="flex gap-2">
@@ -396,16 +397,16 @@ export default function CircleOfSafetyContainer() {
                 placeholder="Phone Number"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="flex-1 h-10 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-outline-variant rounded-xl text-xs focus:border-primary focus:outline-none"
+                className="flex-1 h-10 px-3.5 bg-transparent border border-outline-variant/65 rounded-xl text-xs focus:border-primary focus:outline-none text-foreground"
               />
               <button
                 type="submit"
-                className="h-10 px-4 bg-secondary text-white rounded-xl text-xs font-heading font-bold flex items-center gap-1 hover:opacity-90 cursor-pointer shadow-sm shadow-secondary/15"
+                className="h-10 px-4 bg-primary text-white rounded-xl text-xs font-heading font-bold flex items-center gap-1 hover:opacity-90 cursor-pointer shadow-sm"
               >
                 <Plus className="w-4 h-4" /> Add
               </button>
             </div>
-            {formError && <p className="text-xs text-rose-500 font-medium">{formError}</p>}
+            {formError && <p className="text-xs text-rose-500 font-semibold">{formError}</p>}
           </form>
         )}
       </section>
