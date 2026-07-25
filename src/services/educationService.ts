@@ -6,14 +6,14 @@ import {
   query, 
   where 
 } from 'firebase/firestore';
-import { db, isFirebaseConfigured } from './firebase/firebase';
+import { db, auth, isFirebaseConfigured } from './firebase/firebase';
 
 export class EducationService {
   /**
    * Fetches all completed lesson IDs for the user from Firestore
    */
   public static async fetchCompletedLessons(uid: string): Promise<string[]> {
-    if (!isFirebaseConfigured || !db) {
+    if (!isFirebaseConfigured || !db || !auth?.currentUser) {
       return [];
     }
 
@@ -40,7 +40,7 @@ export class EducationService {
    * Marks a lesson as completed in Firestore
    */
   public static async markLessonComplete(uid: string, lessonId: string): Promise<void> {
-    if (!isFirebaseConfigured || !db) {
+    if (!isFirebaseConfigured || !db || !auth?.currentUser) {
       return;
     }
 

@@ -1,5 +1,5 @@
 import { collection, addDoc, getDocs, query, where, orderBy } from 'firebase/firestore';
-import { db, isFirebaseConfigured } from './firebase/firebase';
+import { db, auth, isFirebaseConfigured } from './firebase/firebase';
 import { useRecoveryStore } from '../store/useRecoveryStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSettingsStore } from '../store/useSettingsStore';
@@ -24,7 +24,7 @@ export class RecoveryService {
       timestamp: Date.now(),
     };
 
-    if (isFirebaseConfigured && db) {
+    if (isFirebaseConfigured && db && auth?.currentUser) {
       try {
         await addDoc(collection(db, 'recovery_sessions'), {
           uid,

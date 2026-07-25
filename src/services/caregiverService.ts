@@ -7,7 +7,7 @@ import {
   query, 
   where 
 } from 'firebase/firestore';
-import { db, isFirebaseConfigured } from './firebase/firebase';
+import { db, auth, isFirebaseConfigured } from './firebase/firebase';
 import { CaregiverContact } from '../types';
 
 export class CaregiverService {
@@ -15,7 +15,7 @@ export class CaregiverService {
    * Fetches all caregiver contacts configured for the specified user uid from Firestore
    */
   public static async fetchContacts(uid: string): Promise<CaregiverContact[]> {
-    if (!isFirebaseConfigured || !db) {
+    if (!isFirebaseConfigured || !db || !auth?.currentUser) {
       return [];
     }
 
@@ -46,7 +46,7 @@ export class CaregiverService {
    * Saves or updates a caregiver contact in Firestore
    */
   public static async saveContact(uid: string, contact: CaregiverContact): Promise<void> {
-    if (!isFirebaseConfigured || !db) {
+    if (!isFirebaseConfigured || !db || !auth?.currentUser) {
       return;
     }
 
@@ -70,7 +70,7 @@ export class CaregiverService {
    * Deletes a caregiver contact from Firestore
    */
   public static async deleteContact(contactId: string): Promise<void> {
-    if (!isFirebaseConfigured || !db) {
+    if (!isFirebaseConfigured || !db || !auth?.currentUser) {
       return;
     }
 

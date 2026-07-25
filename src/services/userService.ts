@@ -1,5 +1,5 @@
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { db, isFirebaseConfigured } from './firebase/firebase';
+import { db, auth, isFirebaseConfigured } from './firebase/firebase';
 import { UserProfile } from '../types';
 
 export class UserService {
@@ -7,7 +7,7 @@ export class UserService {
    * Syncs user profile with Firestore users collection on sign-in
    */
   public static async syncUserProfile(profile: UserProfile): Promise<UserProfile> {
-    if (!isFirebaseConfigured || !db) {
+    if (!isFirebaseConfigured || !db || !auth?.currentUser) {
       return profile;
     }
 
@@ -49,7 +49,7 @@ export class UserService {
    * Updates user recovery goals array
    */
   public static async updateRecoveryGoals(uid: string, goals: string[]): Promise<void> {
-    if (!isFirebaseConfigured || !db) {
+    if (!isFirebaseConfigured || !db || !auth?.currentUser) {
       return;
     }
 

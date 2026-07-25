@@ -86,9 +86,8 @@ export class AuthService {
       isGuest: true,
       createdAt: Date.now(),
     };
-    const synced = await UserService.syncUserProfile(guestUser);
-    useAuthStore.getState().setUser(synced);
-    return synced;
+    useAuthStore.getState().setUser(guestUser);
+    return guestUser;
   }
 
   /**

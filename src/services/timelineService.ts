@@ -9,7 +9,7 @@ import {
   orderBy, 
   writeBatch 
 } from 'firebase/firestore';
-import { db, isFirebaseConfigured } from './firebase/firebase';
+import { db, auth, isFirebaseConfigured } from './firebase/firebase';
 import { TimelineEntry } from '../types';
 
 export class TimelineService {
@@ -17,7 +17,7 @@ export class TimelineService {
    * Fetches all timeline entries for the user from Firestore
    */
   public static async fetchTimelineEntries(uid: string): Promise<TimelineEntry[]> {
-    if (!isFirebaseConfigured || !db) {
+    if (!isFirebaseConfigured || !db || !auth?.currentUser) {
       return [];
     }
 
@@ -65,7 +65,7 @@ export class TimelineService {
       type,
     };
 
-    if (isFirebaseConfigured && db) {
+    if (isFirebaseConfigured && db && auth?.currentUser) {
       try {
         const timelineRef = collection(db, 'timeline_entries');
         const docRef = await addDoc(timelineRef, {
@@ -97,7 +97,7 @@ export class TimelineService {
    * Deletes all timeline logs for a specific user
    */
   public static async clearTimeline(uid: string): Promise<void> {
-    if (!isFirebaseConfigured || !db) {
+    if (!isFirebaseConfigured || !db || !auth?.currentUser) {
       return;
     }
 
