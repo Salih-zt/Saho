@@ -49,8 +49,16 @@ export class AuthService {
         useAuthStore.getState().setUser(profile);
         useAuthStore.getState().setGuest(true);
         return profile;
-      } catch (error) {
-        console.error('Firebase guest signin failed, reverting to local guest mode:', error);
+      } catch (error: any) {
+        if (error?.code === 'auth/admin-restricted-operation') {
+          console.warn(
+            'Firebase Setup Required: Anonymous Authentication is currently disabled in your Firebase console.\n' +
+            'To resolve this: Go to Firebase Console -> Authentication -> Sign-in method, and enable "Anonymous".\n' +
+            'Reverting to fully functional Local Guest Mode in the meantime.'
+          );
+        } else {
+          console.error('Firebase guest signin failed, reverting to local guest mode:', error);
+        }
       }
     }
     
