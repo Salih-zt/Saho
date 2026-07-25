@@ -149,7 +149,14 @@ export default function SahoNowContainer() {
       const data: PulseAIResponse = await response.json();
       setAiResponse(data);
       setCheckedActions([false, false, false]);
-      speakText(data.message);
+
+      if (data.risk === 'high') {
+        speakText("It is necessary for you to breathe right now. " + data.message);
+        setBreathingActive(true);
+        setTimerCount(240);
+      } else {
+        speakText(data.message);
+      }
 
       const saved = await RecoveryService.saveSession({
         emotion: selected,
@@ -169,7 +176,14 @@ export default function SahoNowContainer() {
       const fallback = getLocalFallbackResponse(selected);
       setAiResponse(fallback);
       setCheckedActions([false, false, false]);
-      speakText(fallback.message);
+      
+      if (fallback.risk === 'high') {
+        speakText("It is necessary for you to breathe right now. " + fallback.message);
+        setBreathingActive(true);
+        setTimerCount(240);
+      } else {
+        speakText(fallback.message);
+      }
     } finally {
       setLoading(false);
     }
