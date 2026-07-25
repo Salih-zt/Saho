@@ -1,6 +1,26 @@
+import { z } from 'zod';
 import { PulseAIResponse, VisionAIResponse } from '../../types';
 
-// Mock responses based on emotion/scenario for robust fallback and offline mode
+// Zod Schemas for strict API contracts
+const pulseResponseSchema = z.object({
+  risk: z.enum(['low', 'medium', 'high']),
+  emotion: z.string(),
+  message: z.string(),
+  actions: z.array(z.string()).length(3),
+  breathing: z.boolean(),
+  emergency: z.boolean(),
+});
+
+const visionResponseSchema = z.object({
+  confidence: z.number().min(0).max(1),
+  identifiedItem: z.string(),
+  isTrigger: z.boolean(),
+  reason: z.string(),
+  harmReductionAdvice: z.string(),
+  professionalVerificationAdvice: z.string(),
+});
+
+// Offline/Grounding Compassionate Fallbacks
 const MOCK_PULSE_RESPONSES: Record<string, PulseAIResponse> = {
   craving: {
     risk: 'medium',
@@ -82,17 +102,67 @@ export class GeminiService {
   }
 
   /**
+   * Scans text for malicious prompt injection keywords
+   */
+  private static filterPromptInjection(text: string): string {
+    const lower = text.toLowerCase();
+    const blacklist = [
+      'ignore previous instructions',
+      'ignore system prompt',
+      'bypass security',
+      'override system',
+      'new role',
+      'you are now',
+      'system command',
+      'acting as'
+    ];
+    
+    const containsMaliciousText = blacklist.some((phrase) => lower.includes(phrase));
+    if (containsMaliciousText) {
+      console.warn('[Prompt Guard Alert]: Malicious injection patterns identified. Resetting input context to safety defaults.');
+      return 'seeking de-escalation advice';
+    }
+    return text;
+  }
+
+  /**
+   * Safe fetch request execution with exponential backoff retries
+   */
+  private static async fetchWithRetry(url: string, options: RequestInit, retries = 3, delay = 1000): Promise<Response> {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const response = await fetch(url, options);
+        if (response.ok) {
+          return response;
+        }
+        if (response.status >= 500 && i < retries - 1) {
+          await new Promise((res) => setTimeout(res, delay * Math.pow(2, i)));
+          continue;
+        }
+        return response;
+      } catch (err) {
+        if (i === retries - 1) throw err;
+        await new Promise((res) => setTimeout(res, delay * Math.pow(2, i)));
+      }
+    }
+    throw new Error('API fetch failed after maximum retry attempts.');
+  }
+
+  /**
    * Generates de-escalation response using Gemini Flash
    */
   public static async getPulseGuidance(emotion: string, transcript: string = ''): Promise<PulseAIResponse> {
     const apiKey = this.getApiKey();
     const cleanEmotion = emotion.toLowerCase();
     
-    // Fallback if no API key or in development mode without config
     if (!apiKey) {
       console.warn('GEMINI_API_KEY is not defined. Using local compassionate mock guidance.');
       return this.getMockPulseResponse(cleanEmotion);
     }
+
+    // Input sanitization / injection checks
+    const safeEmotion = this.filterPromptInjection(cleanEmotion);
+    const safeTranscript = this.filterPromptInjection(transcript);
 
     try {
       const systemPrompt = `You are SAHO, a compassionate, non-judgmental recovery companion for individuals with Substance Use Disorder. 
@@ -116,12 +186,12 @@ JSON Response Contract Schema:
 }`;
 
       const userContent = `User context:
-Selected emotional state: "${emotion}"
-User spoke: "${transcript}"
+Selected emotional state: "${safeEmotion}"
+User spoke: "${safeTranscript}"
 
 Provide the JSON response matching the schema contract.`;
 
-      const response = await fetch(
+      const response = await this.fetchWithRetry(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
@@ -141,13 +211,11 @@ Provide the JSON response matching the schema contract.`;
 
       const data = await response.json();
       const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      const parsed: PulseAIResponse = JSON.parse(textResponse.trim());
       
-      // Basic validation
-      if (parsed.risk && parsed.message && Array.isArray(parsed.actions)) {
-        return parsed;
-      }
-      throw new Error('Invalid JSON response schema format from Gemini');
+      // Strict parse & validation using Zod
+      const parsedData = JSON.parse(textResponse.trim());
+      const validated = pulseResponseSchema.parse(parsedData);
+      return validated;
 
     } catch (error) {
       console.error('Error fetching from Gemini API. Falling back to mock:', error);
@@ -183,7 +251,7 @@ JSON Response Contract Schema:
   "professionalVerificationAdvice": string (advice to consult professional or call emergency if unknown substance/medication)
 }`;
 
-      const response = await fetch(
+      const response = await this.fetchWithRetry(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
@@ -210,7 +278,11 @@ JSON Response Contract Schema:
 
       const data = await response.json();
       const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      return JSON.parse(textResponse.trim());
+      
+      // Strict parse & validation using Zod
+      const parsedData = JSON.parse(textResponse.trim());
+      const validated = visionResponseSchema.parse(parsedData);
+      return validated;
 
     } catch (error) {
       console.error('Error in Gemini Vision analysis. Falling back to mock:', error);
@@ -228,7 +300,6 @@ JSON Response Contract Schema:
   }
 
   private static getMockVisionResponse(base64Image: string): VisionAIResponse {
-    // Generate a mock response representing a trigger if the image is analyzed in simulation
     return {
       confidence: 0.85,
       identifiedItem: 'Amber Pill Bottle',

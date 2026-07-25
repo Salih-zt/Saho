@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRecoveryStore } from '../../store/useRecoveryStore';
-import { RecoveryService } from '../../services/recoveryService';
+import { useAuthStore } from '../../store/useAuthStore';
+import { TimelineService } from '../../services/timelineService';
+import { EducationService } from '../../services/educationService';
 import { EducationCard } from '../../types';
 import { 
   BookOpen, Heart, Flame, ShieldAlert, Award, 
@@ -53,10 +55,23 @@ const CARDS: EducationCard[] = [
 ];
 
 export default function EducationContainer() {
+  const { user } = useAuthStore();
   const { timeline } = useRecoveryStore();
   const [selectedCard, setSelectedCard] = useState<EducationCard | null>(null);
   const [playing, setPlaying] = useState(false);
   const [readCompleted, setReadCompleted] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (user) {
+      EducationService.fetchCompletedLessons(user.id).then((completedIds) => {
+        const mapping: Record<string, boolean> = {};
+        completedIds.forEach((id) => {
+          mapping[id] = true;
+        });
+        setReadCompleted(mapping);
+      });
+    }
+  }, [user]);
 
   const getCategoryColor = (category: EducationCard['category']) => {
     switch (category) {
@@ -92,11 +107,23 @@ export default function EducationContainer() {
     // Add to local state
     setReadCompleted((prev) => ({ ...prev, [card.id]: true }));
     
+    const uid = user ? user.id : 'anonymous';
+
+    // Log progress in Firestore
+    if (user && !user.isGuest) {
+      try {
+        await EducationService.markLessonComplete(user.id, card.id);
+      } catch (e) {
+        console.error('Failed to log lesson progress:', e);
+      }
+    }
+    
     // Log achievement to recovery timeline
-    await RecoveryService.addTimelineEntry(
-      'education',
+    await TimelineService.addTimelineEntry(
+      uid,
       `Completed: ${card.title}`,
-      `Read the "${card.title}" card to reinforce healthy coping strategies.`
+      `Read the "${card.title}" card to reinforce healthy coping strategies.`,
+      'education'
     );
   };
 

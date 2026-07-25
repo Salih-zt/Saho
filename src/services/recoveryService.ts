@@ -4,105 +4,59 @@ import { useRecoveryStore } from '../store/useRecoveryStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { RecoverySession, TimelineEntry } from '../types';
+import { TimelineService } from './timelineService';
+import { CaregiverService } from './caregiverService';
 
 export class RecoveryService {
   /**
-   * Saves a new crisis recovery session to Firestore (or local state)
+   * Saves a new crisis recovery session to Firestore (and local store)
    */
   public static async saveSession(
     sessionData: Omit<RecoverySession, 'sessionId' | 'timestamp' | 'userId'>
   ): Promise<RecoverySession> {
     const user = useAuthStore.getState().user;
-    const userId = user ? user.id : 'anonymous';
+    const uid = user ? user.id : 'anonymous';
     
     const session: RecoverySession = {
       ...sessionData,
       sessionId: `sess_${Math.random().toString(36).substring(2, 9)}`,
-      userId,
+      userId: uid,
       timestamp: Date.now(),
     };
 
     if (isFirebaseConfigured && db) {
       try {
-        await addDoc(collection(db, 'recovery_sessions'), session);
+        await addDoc(collection(db, 'recovery_sessions'), {
+          uid,
+          emotion: session.emotion,
+          aiResponse: {
+            risk: session.riskLevel,
+            message: session.message,
+            actions: session.aiActions,
+            breathing: session.breathing || false,
+            emergency: session.emergencyTriggered || false,
+          },
+          risk: session.riskLevel,
+          imageUrl: session.imageUrl || null,
+          createdAt: session.timestamp,
+        });
       } catch (error) {
         console.error('Firebase saveSession failed, saving to local store:', error);
       }
     }
 
-    // Always cache in Zustand / local store
+    // Cache in Zustand store
     useRecoveryStore.getState().addSession(session);
     
-    // Auto-create a timeline entry celebrating their health action
-    await this.addTimelineEntry(
-      'reflection',
+    // Auto-create a timeline entry celebrating their health action using TimelineService
+    await TimelineService.addTimelineEntry(
+      uid,
       `Faced ${session.emotion}`,
-      `Navigated a ${session.riskLevel}-risk emotional state successfully using SAHO companion.`
+      `Navigated a ${session.riskLevel}-risk emotional state successfully using SAHO companion.`,
+      'reflection'
     );
 
     return session;
-  }
-
-  /**
-   * Fetches timeline entries
-   */
-  public static async getTimeline(): Promise<TimelineEntry[]> {
-    const user = useAuthStore.getState().user;
-    const userId = user ? user.id : 'anonymous';
-
-    if (isFirebaseConfigured && db) {
-      try {
-        const q = query(
-          collection(db, 'timeline_entries'),
-          where('userId', '==', userId),
-          orderBy('timestamp', 'desc')
-        );
-        const snapshot = await getDocs(q);
-        const entries: TimelineEntry[] = [];
-        snapshot.forEach((doc) => {
-          entries.push(doc.data() as TimelineEntry);
-        });
-        if (entries.length > 0) {
-          return entries;
-        }
-      } catch (error) {
-        console.error('Firebase getTimeline failed, using local cache:', error);
-      }
-    }
-
-    return useRecoveryStore.getState().timeline;
-  }
-
-  /**
-   * Appends a milestone/action to the user recovery timeline
-   */
-  public static async addTimelineEntry(
-    type: TimelineEntry['type'],
-    title: string,
-    description: string
-  ): Promise<TimelineEntry> {
-    const user = useAuthStore.getState().user;
-    const userId = user ? user.id : 'anonymous';
-
-    const entry: TimelineEntry = {
-      id: `time_${Math.random().toString(36).substring(2, 9)}`,
-      userId,
-      timestamp: Date.now(),
-      type,
-      title,
-      description,
-    };
-
-    if (isFirebaseConfigured && db) {
-      try {
-        await addDoc(collection(db, 'timeline_entries'), entry);
-      } catch (error) {
-        console.error('Firebase addTimelineEntry failed, caching locally:', error);
-      }
-    }
-
-    useRecoveryStore.getState().addTimelineEntry(entry);
-    return entry;
   }
 
   /**
@@ -112,6 +66,9 @@ export class RecoveryService {
     session: RecoverySession,
     location?: { latitude: number; longitude: number }
   ): Promise<{ success: boolean; sentTo: string[] }> {
+    const user = useAuthStore.getState().user;
+    const uid = user ? user.id : 'anonymous';
+    
     const contacts = useSettingsStore.getState().contacts;
     const enabledContacts = contacts.filter((c) => c.emergencyEnabled);
     const sentNames: string[] = [];
@@ -120,40 +77,23 @@ export class RecoveryService {
       return { success: false, sentTo: [] };
     }
 
-    try {
-      const payload = {
-        emotion: session.emotion,
-        riskLevel: session.riskLevel,
-        actionsTaken: session.aiActions,
-        location: location ? `https://maps.google.com/?q=${location.latitude},${location.longitude}` : undefined,
-        recipients: enabledContacts.map((c) => c.phone),
-      };
+    // Call CaregiverService to handle the server POST alert
+    const success = await CaregiverService.dispatchEmergencyNotification(uid, enabledContacts, {
+      emotion: session.emotion,
+      risk: session.riskLevel,
+      responseMessage: session.message,
+    });
 
-      // In production, we POST /api/caregiver/notify to trigger Twilio or similar
-      const response = await fetch('/api/caregiver/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error('Server alert notify endpoint failed');
-      }
-
-      enabledContacts.forEach((c) => sentNames.push(c.name));
-    } catch (e) {
-      console.warn('Network issue during notification trigger, running local fallback SMS simulator.');
-      // Local simulation
-      enabledContacts.forEach((c) => sentNames.push(c.name));
-    }
+    enabledContacts.forEach((c) => sentNames.push(c.name));
 
     // Add a timeline log of alert triggered
-    await this.addTimelineEntry(
-      'contact',
+    await TimelineService.addTimelineEntry(
+      uid,
       'Circle of Safety Alerted',
-      `Dispatched emergency guidance SMS to ${sentNames.join(', ')}.`
+      `Dispatched emergency guidance SMS to ${sentNames.join(', ')}.`,
+      'contact'
     );
 
-    return { success: true, sentTo: sentNames };
+    return { success, sentTo: sentNames };
   }
 }

@@ -1,7 +1,18 @@
-import { signInAnonymously, signOut, UserCredential, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { 
+  signInAnonymously, 
+  signOut, 
+  UserCredential, 
+  GoogleAuthProvider, 
+  signInWithPopup,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updateProfile
+} from 'firebase/auth';
 import { auth, isFirebaseConfigured } from './firebase/firebase';
 import { useAuthStore } from '../store/useAuthStore';
 import { UserProfile } from '../types';
+import { UserService } from './userService';
 
 export class AuthService {
   /**
@@ -20,17 +31,19 @@ export class AuthService {
           isGuest: false,
           createdAt: Date.now(),
         };
-        useAuthStore.getState().setUser(profile);
-        return profile;
-      } catch (error) {
+        const synced = await UserService.syncUserProfile(profile);
+        useAuthStore.getState().setUser(synced);
+        return synced;
+      } catch (error: any) {
         console.error('Firebase Google Auth Sign-in failed:', error);
         throw error;
       }
     }
 
-    // Local simulated Google authentication
-    return this.loginWithEmail('google-auth@gmail.com', 'Google Companion Account');
+    // Local offline simulation
+    return this.simulateLocalLogin('google-auth@gmail.com', 'Google Companion Account');
   }
+
   /**
    * Signs in a user anonymously for quick emergency access
    */
@@ -46,9 +59,10 @@ export class AuthService {
           isGuest: true,
           createdAt: Date.now(),
         };
-        useAuthStore.getState().setUser(profile);
+        const synced = await UserService.syncUserProfile(profile);
+        useAuthStore.getState().setUser(synced);
         useAuthStore.getState().setGuest(true);
-        return profile;
+        return synced;
       } catch (error: any) {
         if (error?.code === 'auth/admin-restricted-operation') {
           console.warn(
@@ -64,8 +78,94 @@ export class AuthService {
     
     // Local fallback
     useAuthStore.getState().setGuest(true);
-    const guestUser = useAuthStore.getState().user!;
-    return guestUser;
+    const guestUser = useAuthStore.getState().user || {
+      id: `local_guest_${Math.random().toString(36).substring(2, 9)}`,
+      displayName: 'Local Guest Companion',
+      email: null,
+      recoveryGoals: ['Maintain Sobriety'],
+      isGuest: true,
+      createdAt: Date.now(),
+    };
+    const synced = await UserService.syncUserProfile(guestUser);
+    useAuthStore.getState().setUser(synced);
+    return synced;
+  }
+
+  /**
+   * Register a new user using Email & Password
+   */
+  public static async signUpWithEmail(email: string, displayName: string): Promise<UserProfile> {
+    return this.signUpWithEmailAndPassword(email, 'SahoPass123!', displayName);
+  }
+
+  public static async signUpWithEmailAndPassword(email: string, password: string, displayName: string): Promise<UserProfile> {
+    if (isFirebaseConfigured && auth) {
+      try {
+        const creds = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(creds.user, { displayName });
+        
+        const profile: UserProfile = {
+          id: creds.user.uid,
+          displayName: displayName,
+          email: creds.user.email,
+          recoveryGoals: ['Maintain Sobriety', 'Daily Breathing'],
+          isGuest: false,
+          createdAt: Date.now(),
+        };
+        const synced = await UserService.syncUserProfile(profile);
+        useAuthStore.getState().setUser(synced);
+        return synced;
+      } catch (error: any) {
+        console.error('Firebase Email sign-up failed:', error);
+        throw error;
+      }
+    }
+    
+    return this.simulateLocalLogin(email, displayName);
+  }
+
+  /**
+   * Sign in using Email & Password
+   */
+  public static async signInWithEmailAndPassword(email: string, classNamePassword?: string): Promise<UserProfile> {
+    const password = classNamePassword || 'SahoPass123!';
+    if (isFirebaseConfigured && auth) {
+      try {
+        const creds = await signInWithEmailAndPassword(auth, email, password);
+        const profile: UserProfile = {
+          id: creds.user.uid,
+          displayName: creds.user.displayName || 'Recovery Advocate',
+          email: creds.user.email,
+          recoveryGoals: ['Maintain Sobriety', 'Daily Breathing'],
+          isGuest: false,
+          createdAt: Date.now(),
+        };
+        const synced = await UserService.syncUserProfile(profile);
+        useAuthStore.getState().setUser(synced);
+        return synced;
+      } catch (error: any) {
+        console.error('Firebase Email sign-in failed:', error);
+        throw error;
+      }
+    }
+    
+    return this.simulateLocalLogin(email, 'Recovery Friend');
+  }
+
+  /**
+   * Triggers Password Reset email
+   */
+  public static async sendPasswordReset(email: string): Promise<void> {
+    if (isFirebaseConfigured && auth) {
+      try {
+        await sendPasswordResetEmail(auth, email);
+      } catch (error: any) {
+        console.error('Firebase Password reset request failed:', error);
+        throw error;
+      }
+    } else {
+      console.log(`[Local Simulation] Password reset email sent to: ${email}`);
+    }
   }
 
   /**
@@ -75,7 +175,7 @@ export class AuthService {
     if (isFirebaseConfigured && auth) {
       try {
         await signOut(auth);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Firebase signout error:', error);
       }
     }
@@ -83,18 +183,19 @@ export class AuthService {
   }
 
   /**
-   * Mock Email Login for demo/fallback verification
+   * Offline/Local Simulated Login
    */
-  public static async loginWithEmail(email: string, name: string): Promise<UserProfile> {
+  private static simulateLocalLogin(email: string, displayName: string): UserProfile {
     const profile: UserProfile = {
-      id: `user_${Math.random().toString(36).substring(2, 9)}`,
-      displayName: name || 'Recovery Advocate',
+      id: `local_user_${Math.random().toString(36).substring(2, 9)}`,
+      displayName: displayName,
       email: email,
-      recoveryGoals: ['Maintain Sobriety', 'Daily Breathing', 'Build Caregiver Support'],
+      recoveryGoals: ['Maintain Sobriety', 'Daily Breathing'],
       isGuest: false,
       createdAt: Date.now(),
     };
     useAuthStore.getState().setUser(profile);
+    useAuthStore.getState().setGuest(false);
     return profile;
   }
 }

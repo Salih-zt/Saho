@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { AuthService } from '../../services/authService';
+import { CaregiverService } from '../../services/caregiverService';
 import { CaregiverContact } from '../../types';
 import { 
   User, Shield, Accessibility, LogOut, CheckCircle, 
@@ -11,7 +12,10 @@ import {
 } from 'lucide-react';
 
 export default function CircleOfSafetyContainer() {
-  const { theme, toggleTheme, accessibility, updateAccessibility, contacts, addContact, removeContact } = useSettingsStore();
+  const { 
+    theme, toggleTheme, accessibility, updateAccessibility, 
+    contacts, setContacts, addContact, removeContact, updateContact 
+  } = useSettingsStore();
   const { user, isGuest } = useAuthStore();
   
   // Local state for contact form
@@ -20,12 +24,29 @@ export default function CircleOfSafetyContainer() {
   const [phone, setPhone] = useState('');
   const [emergencyEnabled, setEmergencyEnabled] = useState(true);
   const [formError, setFormError] = useState('');
+  const [loadingContacts, setLoadingContacts] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setLoadingContacts(true);
+      CaregiverService.fetchContacts(user.id)
+        .then((list) => {
+          setContacts(list);
+        })
+        .finally(() => {
+          setLoadingContacts(false);
+        });
+    }
+  }, [user, setContacts]);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginName, setLoginName] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [showEmailLogin, setShowEmailLogin] = useState(false);
+  const [isSignUpMode, setIsSignUpMode] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
 
-  const handleAddContact = (e: React.FormEvent) => {
+  const handleAddContact = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
 
@@ -47,18 +68,82 @@ export default function CircleOfSafetyContainer() {
       emergencyEnabled,
     };
 
-    addContact(newContact);
-    setName('');
-    setRelationship('');
-    setPhone('');
+    try {
+      if (user) {
+        await CaregiverService.saveContact(user.id, newContact);
+      }
+      addContact(newContact);
+      setName('');
+      setRelationship('');
+      setPhone('');
+    } catch (err: any) {
+      setFormError('Failed to save contact to database.');
+    }
   };
 
-  const handleMockLogin = async (e: React.FormEvent) => {
+  const handleToggleEmergency = async (contact: CaregiverContact) => {
+    const updated = { ...contact, emergencyEnabled: !contact.emergencyEnabled };
+    try {
+      if (user) {
+        await CaregiverService.saveContact(user.id, updated);
+      }
+      updateContact(updated);
+    } catch (err: any) {
+      console.error('Failed to toggle emergency contact:', err);
+    }
+  };
+
+  const handleDeleteContact = async (contactId: string) => {
+    try {
+      await CaregiverService.deleteContact(contactId);
+      removeContact(contactId);
+    } catch (err: any) {
+      console.error('Failed to delete emergency contact:', err);
+    }
+  };
+
+  const handleEmailAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginEmail) return;
-    await AuthService.loginWithEmail(loginEmail, loginName || 'Recovery Friend');
-    setLoginSuccess(true);
-    setTimeout(() => setLoginSuccess(false), 3000);
+    setFormError('');
+    setLoginSuccess(false);
+
+    try {
+      if (isSignUpMode) {
+        if (!loginName || !loginEmail || !loginPassword) {
+          setFormError('Please fill in all signup fields.');
+          return;
+        }
+        await AuthService.signUpWithEmailAndPassword(loginEmail, loginPassword, loginName);
+      } else {
+        if (!loginEmail || !loginPassword) {
+          setFormError('Please enter your email and password.');
+          return;
+        }
+        await AuthService.signInWithEmailAndPassword(loginEmail, loginPassword);
+      }
+      setLoginSuccess(true);
+      setLoginEmail('');
+      setLoginName('');
+      setLoginPassword('');
+      setTimeout(() => setLoginSuccess(false), 3000);
+    } catch (err: any) {
+      setFormError(err.message || 'Authentication failed. Please verify credentials.');
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!loginEmail) {
+      setFormError('Please enter your email to request a reset link.');
+      return;
+    }
+    setFormError('');
+    try {
+      await AuthService.sendPasswordReset(loginEmail);
+      setResetEmailSent(true);
+      setTimeout(() => setResetEmailSent(false), 4000);
+    } catch (err: any) {
+      setFormError('Reset request failed: ' + err.message);
+    }
   };
 
   const handleGoogleLogin = async () => {
@@ -67,7 +152,7 @@ export default function CircleOfSafetyContainer() {
       await AuthService.signInWithGoogle();
       setLoginSuccess(true);
       setTimeout(() => setLoginSuccess(false), 3000);
-    } catch (e) {
+    } catch (e: any) {
       setFormError('Google Sign-in failed. Please try again.');
     }
   };
@@ -144,34 +229,78 @@ export default function CircleOfSafetyContainer() {
             </div>
 
             {showEmailLogin && (
-              <form onSubmit={handleMockLogin} className="space-y-2 pt-2 border-t border-outline-variant/30">
-                <input
-                  type="text"
-                  placeholder="Your Name"
-                  value={loginName}
-                  onChange={(e) => setLoginName(e.target.value)}
-                  className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800 border border-outline-variant rounded-2xl text-sm focus:border-primary focus:outline-none"
-                />
-                <div className="flex gap-2">
+              <form onSubmit={handleEmailAuthSubmit} className="space-y-3 pt-2 border-t border-outline-variant/30 text-left">
+                <div className="flex justify-between items-center px-1">
+                  <span className="text-xs font-bold text-outline uppercase tracking-wider">
+                    {isSignUpMode ? 'Create Account' : 'Sign In'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSignUpMode(!isSignUpMode);
+                      setFormError('');
+                    }}
+                    className="text-[10px] font-bold text-primary dark:text-secondary-fixed hover:underline cursor-pointer"
+                  >
+                    {isSignUpMode ? 'SWITCH TO SIGN IN' : 'SWITCH TO SIGN UP'}
+                  </button>
+                </div>
+
+                {isSignUpMode && (
                   <input
-                    type="email"
-                    placeholder="email@example.com"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    className="flex-1 h-11 px-4 bg-slate-50 dark:bg-slate-800 border border-outline-variant rounded-2xl text-sm focus:border-primary focus:outline-none"
+                    type="text"
+                    placeholder="Your Name"
+                    value={loginName}
+                    onChange={(e) => setLoginName(e.target.value)}
+                    className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800 border border-outline-variant rounded-2xl text-sm focus:border-primary focus:outline-none"
                     required
                   />
+                )}
+
+                <input
+                  type="email"
+                  placeholder="email@example.com"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800 border border-outline-variant rounded-2xl text-sm focus:border-primary focus:outline-none"
+                  required
+                />
+
+                <input
+                  type="password"
+                  placeholder="Password (Min 6 characters)"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800 border border-outline-variant rounded-2xl text-sm focus:border-primary focus:outline-none"
+                  required
+                />
+
+                <div className="flex items-center justify-between gap-4 pt-1">
+                  {!isSignUpMode && (
+                    <button
+                      type="button"
+                      onClick={handlePasswordReset}
+                      className="text-[10px] font-semibold text-outline hover:underline cursor-pointer"
+                    >
+                      Forgot password?
+                    </button>
+                  )}
                   <button
                     type="submit"
-                    className="h-11 px-4 bg-primary text-white rounded-2xl text-xs font-heading font-bold hover:opacity-90 transition active:scale-95 cursor-pointer shadow-sm shadow-primary/10"
+                    className="ml-auto h-11 px-6 bg-primary text-white rounded-2xl text-xs font-heading font-bold hover:opacity-90 transition active:scale-95 cursor-pointer shadow-sm shadow-primary/10"
                   >
-                    SIGN IN
+                    {isSignUpMode ? 'SIGN UP' : 'SIGN IN'}
                   </button>
                 </div>
               </form>
             )}
 
             {formError && <p className="text-xs text-rose-500 font-medium text-center">{formError}</p>}
+            {resetEmailSent && (
+              <p className="text-xs text-secondary font-medium text-center">
+                Reset link dispatched to your email address.
+              </p>
+            )}
             {loginSuccess && (
               <p className="text-xs text-secondary flex items-center justify-center gap-1">
                 <CheckCircle className="w-3.5 h-3.5" /> Successfully authenticated.
@@ -214,20 +343,17 @@ export default function CircleOfSafetyContainer() {
               <div className="flex items-center space-x-3">
                 <button
                   type="button"
-                  onClick={() => {
-                    const nextEnabled = !contact.emergencyEnabled;
-                    useSettingsStore.getState().updateContact({ ...contact, emergencyEnabled: nextEnabled });
-                  }}
+                  onClick={() => handleToggleEmergency(contact)}
                   className={`px-3 py-1 text-[10px] font-heading font-extrabold rounded-lg transition-colors cursor-pointer border ${
                     contact.emergencyEnabled 
                       ? 'bg-secondary/15 border-secondary/35 text-secondary' 
-                      : 'bg-slate-200 dark:bg-slate-700 border-outline-variant/30 text-muted-foreground'
+                       : 'bg-slate-200 dark:bg-slate-700 border-outline-variant/30 text-muted-foreground'
                   }`}
                 >
                   {contact.emergencyEnabled ? 'SOS ON' : 'SOS OFF'}
                 </button>
                 <button 
-                  onClick={() => removeContact(contact.contactId)}
+                  onClick={() => handleDeleteContact(contact.contactId)}
                   className="p-1 text-rose-500 hover:text-rose-700 cursor-pointer"
                   aria-label={`Remove ${contact.name}`}
                 >

@@ -32,6 +32,7 @@ export interface RecoverySession {
   aiActions: string[];
   breathing: boolean;
   emergencyTriggered: boolean;
+  imageUrl?: string;
 }
 
 export interface TimelineEntry {

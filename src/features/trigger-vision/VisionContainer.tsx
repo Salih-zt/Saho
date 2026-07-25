@@ -2,9 +2,13 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { VisionAIResponse } from '../../types';
-import { Camera, Upload, AlertTriangle, ShieldAlert, Sparkles, RefreshCw, X } from 'lucide-react';
+import { useAuthStore } from '../../store/useAuthStore';
+import { StorageService } from '../../services/storageService';
+import { RecoveryService } from '../../services/recoveryService';
+import { Camera, Upload, AlertTriangle, ShieldAlert, Sparkles, RefreshCw } from 'lucide-react';
 
 export default function VisionContainer() {
+  const { user } = useAuthStore();
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -91,9 +95,9 @@ export default function VisionContainer() {
       return;
     }
 
-    // Validate size (max 8MB)
-    if (file.size > 8 * 1024 * 1024) {
-      setErrorMsg('Image file size must be under 8MB.');
+    // Validate size (max 5MB - Security Guideline)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg('Image file size must be under 5MB.');
       return;
     }
 
@@ -108,13 +112,24 @@ export default function VisionContainer() {
     reader.readAsDataURL(file);
   };
 
-  // Call vision route
+  // Call vision route & upload snapshot
   const handleAnalyze = async (base64Data: string) => {
     setLoading(true);
     setErrorMsg('');
     setResult(null);
 
     try {
+      // 1. Upload base64 image to Firebase Storage if logged in
+      let imageUrl = '';
+      if (user && !user.isGuest) {
+        try {
+          imageUrl = await StorageService.uploadBase64Image(user.id, base64Data);
+        } catch (storageErr: any) {
+          console.error('Failed to upload vision image to Firebase Storage:', storageErr);
+        }
+      }
+
+      // 2. Call the server side vision analyzer
       const res = await fetch('/api/vision/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -127,8 +142,21 @@ export default function VisionContainer() {
 
       const data: VisionAIResponse = await res.json();
       setResult(data);
-    } catch (e) {
-      setErrorMsg('Vision analysis failed. We returned a simulation response.');
+
+      // 3. Log a high-risk recovery session if a trigger substance is identified
+      if (data.isTrigger) {
+        await RecoveryService.saveSession({
+          emotion: `Trigger: ${data.identifiedItem}`,
+          riskLevel: 'high',
+          message: data.reason,
+          aiActions: [data.harmReductionAdvice, data.professionalVerificationAdvice],
+          breathing: true,
+          emergencyTriggered: data.confidence > 0.85,
+          imageUrl: imageUrl || undefined,
+        });
+      }
+    } catch (e: any) {
+      setErrorMsg('Vision analysis failed. Reverting to local grounding analyzer.');
       // Local fallback simulation
       setResult({
         confidence: 0.9,

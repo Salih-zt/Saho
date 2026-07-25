@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRecoveryStore } from '../../store/useRecoveryStore';
+import { useAuthStore } from '../../store/useAuthStore';
+import { TimelineService } from '../../services/timelineService';
 import { TimelineEntry } from '../../types';
 import { 
   History, Calendar, Wind, Phone, BookOpen, 
@@ -17,24 +19,50 @@ const REFLECTIONS = [
 ];
 
 export default function TimelineContainer() {
-  const { timeline, clearTimeline } = useRecoveryStore();
+  const { user } = useAuthStore();
+  const { timeline, setTimeline } = useRecoveryStore();
   const [reflection, setReflection] = useState('');
   const [loadingReflection, setLoadingReflection] = useState(false);
+  const [loadingTimeline, setLoadingTimeline] = useState(false);
 
   // Load a daily reflection
   const getReflection = () => {
     setLoadingReflection(true);
-    // Simple heuristic selection based on date index, or random
     const idx = new Date().getDate() % REFLECTIONS.length;
     setTimeout(() => {
       setReflection(REFLECTIONS[idx]);
       setLoadingReflection(false);
-    }, 500);
+    }, 300);
   };
 
   useEffect(() => {
     getReflection();
-  }, []);
+    
+    // Fetch Firestore timeline entries
+    if (user) {
+      setLoadingTimeline(true);
+      TimelineService.fetchTimelineEntries(user.id)
+        .then((entries) => {
+          setTimeline(entries);
+        })
+        .finally(() => {
+          setLoadingTimeline(false);
+        });
+    }
+  }, [user]);
+
+  const handleResetTimeline = async () => {
+    if (!user) return;
+    try {
+      setLoadingTimeline(true);
+      await TimelineService.clearTimeline(user.id);
+      setTimeline([]);
+    } catch (e) {
+      console.error('Failed to clear timeline:', e);
+    } finally {
+      setLoadingTimeline(false);
+    }
+  };
 
   const getEntryIcon = (type: TimelineEntry['type']) => {
     switch (type) {
@@ -67,7 +95,7 @@ export default function TimelineContainer() {
   };
 
   return (
-    <div className="max-w-md mx-auto w-full px-4 py-6 space-y-6 pb-20">
+    <div className="max-w-[600px] mx-auto w-full px-container-padding py-6 space-y-6 pb-32">
       
       {/* Header section */}
       <header className="space-y-1">
@@ -106,49 +134,56 @@ export default function TimelineContainer() {
           </h3>
           {timeline.length > 0 && (
             <button
-              onClick={clearTimeline}
-              className="text-[10px] uppercase font-bold text-rose-500 hover:text-rose-700 cursor-pointer"
+              onClick={handleResetTimeline}
+              className="text-[10px] uppercase font-bold text-rose-500 hover:text-rose-700 cursor-pointer disabled:opacity-50"
+              disabled={loadingTimeline}
             >
               Reset Log
             </button>
           )}
         </div>
 
-        <div className="space-y-3 relative before:absolute before:left-6 before:top-2 before:bottom-2 before:w-0.5 before:bg-border/60">
-          {timeline.map((entry) => (
-            <div 
-              key={entry.id}
-              className={`flex items-start p-4 rounded-3xl border relative z-10 bg-card ml-1.5 ${getEntryColor(entry.type)}`}
-            >
-              {/* Event Icon Bubble */}
-              <div className="w-9 h-9 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-border/50 flex items-center justify-center flex-shrink-0 mr-4">
-                {getEntryIcon(entry.type)}
-              </div>
-
-              {/* Event text details */}
-              <div className="space-y-1 flex-1">
-                <div className="flex items-baseline justify-between">
-                  <h4 className="font-bold text-sm text-foreground">{entry.title}</h4>
-                  <span className="text-[10px] text-muted-foreground flex items-center gap-1 font-medium">
-                    <Calendar className="w-3.5 h-3.5" />
-                    {new Date(entry.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                  </span>
+        {loadingTimeline ? (
+          <div className="h-20 flex items-center justify-center">
+            <RefreshCw className="w-6 h-6 text-primary animate-spin" />
+          </div>
+        ) : (
+          <div className="space-y-3 relative before:absolute before:left-6 before:top-2 before:bottom-2 before:w-0.5 before:bg-border/60">
+            {timeline.map((entry) => (
+              <div 
+                key={entry.id}
+                className={`flex items-start p-4 rounded-3xl border relative z-10 bg-card ml-1.5 ${getEntryColor(entry.type)}`}
+              >
+                {/* Event Icon Bubble */}
+                <div className="w-9 h-9 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-border/50 flex items-center justify-center flex-shrink-0 mr-4">
+                  {getEntryIcon(entry.type)}
                 </div>
-                <p className="text-xs leading-relaxed text-muted-foreground font-medium">
-                  {entry.description}
-                </p>
-              </div>
-            </div>
-          ))}
 
-          {timeline.length === 0 && (
-            <div className="p-8 border border-dashed border-border rounded-3xl text-center ml-1.5 bg-card">
-              <Award className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
-              <p className="text-xs font-semibold text-muted-foreground">Your timeline is ready.</p>
-              <p className="text-[11px] text-muted-foreground/75 mt-0.5">Complete guided exercises or log cravings to see milestones celebrated here.</p>
-            </div>
-          )}
-        </div>
+                {/* Event text details */}
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-baseline justify-between">
+                    <h4 className="font-bold text-sm text-foreground">{entry.title}</h4>
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1 font-medium">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {new Date(entry.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    </span>
+                  </div>
+                  <p className="text-xs leading-relaxed text-muted-foreground font-medium">
+                    {entry.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+
+            {timeline.length === 0 && (
+              <div className="p-8 border border-dashed border-border rounded-3xl text-center ml-1.5 bg-card">
+                <Award className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
+                <p className="text-xs font-semibold text-muted-foreground">Your timeline is ready.</p>
+                <p className="text-[11px] text-muted-foreground/75 mt-0.5">Complete guided exercises or log cravings to see milestones celebrated here.</p>
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
     </div>

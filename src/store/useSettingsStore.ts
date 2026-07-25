@@ -9,6 +9,7 @@ interface SettingsState {
   onboardingCompleted: boolean;
   toggleTheme: () => void;
   updateAccessibility: (prefs: Partial<AccessibilityPreferences>) => void;
+  setContacts: (contacts: CaregiverContact[]) => void;
   addContact: (contact: CaregiverContact) => void;
   removeContact: (contactId: string) => void;
   updateContact: (contact: CaregiverContact) => void;
@@ -23,29 +24,12 @@ const defaultAccessibility: AccessibilityPreferences = {
   textToSpeech: false,
 };
 
-const defaultContacts: CaregiverContact[] = [
-  {
-    contactId: '1',
-    name: 'Sarah (Caregiver)',
-    relationship: 'Sister',
-    phone: '555-0199',
-    emergencyEnabled: true,
-  },
-  {
-    contactId: '2',
-    name: 'Dr. Robert Carter',
-    relationship: 'Therapist',
-    phone: '555-0144',
-    emergencyEnabled: false,
-  }
-];
-
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       theme: 'light',
       accessibility: defaultAccessibility,
-      contacts: defaultContacts,
+      contacts: [],
       onboardingCompleted: false,
       toggleTheme: () =>
         set((state) => ({
@@ -55,6 +39,7 @@ export const useSettingsStore = create<SettingsState>()(
         set((state) => ({
           accessibility: { ...state.accessibility, ...prefs },
         })),
+      setContacts: (contacts) => set({ contacts }),
       addContact: (contact) =>
         set((state) => ({
           contacts: state.contacts.length < 5 ? [...state.contacts, contact] : state.contacts,

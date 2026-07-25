@@ -16,36 +16,10 @@ interface RecoveryState {
   setVoiceSession: (session: Partial<{ transcript: string; active: boolean; listening: boolean }>) => void;
   setActiveSession: (session: RecoverySession | null) => void;
   addSession: (session: RecoverySession) => void;
+  setTimeline: (timeline: TimelineEntry[]) => void;
   addTimelineEntry: (entry: TimelineEntry) => void;
   clearTimeline: () => void;
 }
-
-const mockTimeline: TimelineEntry[] = [
-  {
-    id: 't-1',
-    userId: 'any',
-    timestamp: Date.now() - 3 * 24 * 60 * 60 * 1000, // 3 days ago
-    type: 'milestone',
-    title: 'Recovery Path Initiated',
-    description: 'You downloaded SAHO and configured your Circle of Safety. A brave first step.',
-  },
-  {
-    id: 't-2',
-    userId: 'any',
-    timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000, // 2 days ago
-    type: 'breathing',
-    title: 'Deep Breathing Session',
-    description: 'Completed 3 minutes of guided breathing to navigate a mild afternoon craving.',
-  },
-  {
-    id: 't-3',
-    userId: 'any',
-    timestamp: Date.now() - 1 * 24 * 60 * 60 * 1000, // 1 day ago
-    type: 'education',
-    title: 'Learned about Cravings',
-    description: 'Read the "Navigating Cravings" micro-card to understand physical triggers.',
-  }
-];
 
 export const useRecoveryStore = create<RecoveryState>()(
   persist(
@@ -57,7 +31,7 @@ export const useRecoveryStore = create<RecoveryState>()(
       },
       activeSession: null,
       sessions: [],
-      timeline: mockTimeline,
+      timeline: [],
       
       setVoiceSession: (session) =>
         set((state) => ({
@@ -68,6 +42,7 @@ export const useRecoveryStore = create<RecoveryState>()(
         set((state) => ({
           sessions: [session, ...state.sessions],
         })),
+      setTimeline: (timeline) => set({ timeline }),
       addTimelineEntry: (entry) =>
         set((state) => ({
           timeline: [entry, ...state.timeline],
