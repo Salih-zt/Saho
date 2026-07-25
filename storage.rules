@@ -1,0 +1,15 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Check if the request is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Rules for trigger vision image uploads
+    match /images/{uid}/{allPaths=**} {
+      allow read, write: if isAuthenticated() && request.auth.uid == uid;
+    }
+  }
+}
