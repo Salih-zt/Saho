@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0d1e36; /* Deep Blue for Trust */
+  --color-primary-light: #1e3557;
+  --color-primary-dark: #07101e;
+  --color-secondary: #0f9f6e; /* Emerald Green for Recovery */
+  --color-secondary-light: #31c48d;
+  --color-secondary-dark: #057a55;
+  --color-accent: #d97706; /* Warm Amber for Attention */
+  --color-accent-light: #f59e0b;
+  --color-error: #e02424; /* Soft Red */
+  
+  --color-bg-light: #f9fafb;
+  --color-bg-dark: #080f1e;
+  --color-card-light: #ffffff;
+  --color-card-dark: #111c30;
+  
+  --font-sans: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+:root {
+  --background: #f9fafb;
+  --foreground: #111827;
+  --card: #ffffff;
+  --border: #e5e7eb;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #080f1e;
+    --foreground: #f9fafb;
+    --card: #111c30;
+    --border: #1f2937;
+  }
+}
+
+/* Explicit high-contrast mode override */
+.high-contrast {
+  --background: #ffffff !important;
+  --foreground: #000000 !important;
+  --card: #ffffff !important;
+  --border: #000000 !important;
+  --primary: #0000ff !important;
+  --secondary: #008000 !important;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Focus outline for keyboard accessibility */
+*:focus-visible {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8);
+}
