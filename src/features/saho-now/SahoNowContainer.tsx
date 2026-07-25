@@ -10,7 +10,7 @@ import { PulseAIResponse } from '../../types';
 import { 
   Mic, AlertCircle, RefreshCw, CheckCircle2, 
   Wind, ShieldAlert, Heart, Volume2, VolumeX, Sparkles, X,
-  Utensils, AlertTriangle, Users
+  Utensils, AlertTriangle, Users, Phone
 } from 'lucide-react';
 
 export default function SahoNowContainer() {
@@ -31,6 +31,8 @@ export default function SahoNowContainer() {
   const [checkedActions, setCheckedActions] = useState<boolean[]>([false, false, false]);
   const [speechSupported, setSpeechSupported] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showContactsModal, setShowContactsModal] = useState(false);
+  const { contacts } = useSettingsStore();
   
   const recognitionRef = useRef<any>(null);
 
@@ -262,17 +264,27 @@ export default function SahoNowContainer() {
             className="space-y-md text-center py-6 flex flex-col items-center w-full"
           >
             {/* Upper profile header */}
-            <div className="flex items-center space-x-3 self-start mb-4">
-              <div className="w-9 h-9 rounded-full overflow-hidden border border-outline-variant bg-surface-container-high shadow-sm">
-                <img 
-                  className="w-full h-full object-cover" 
-                  alt="Companion guide" 
-                  src="/profile_placeholder.png"
-                />
+            <div className="flex justify-between items-center w-full mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-9 h-9 rounded-full overflow-hidden border border-outline-variant bg-surface-container-high shadow-sm">
+                  <img 
+                    className="w-full h-full object-cover" 
+                    alt="Companion guide" 
+                    src="/profile_placeholder.png"
+                  />
+                </div>
+                <h2 className="font-heading font-semibold text-lg text-primary dark:text-secondary-fixed">
+                  Hello {user?.displayName || 'Friend'}, I'm here.
+                </h2>
               </div>
-              <h2 className="font-heading font-semibold text-lg text-primary dark:text-secondary-fixed">
-                Hello {user?.displayName || 'Friend'}, I'm here.
-              </h2>
+              
+              <button
+                onClick={() => setShowContactsModal(true)}
+                className="w-9 h-9 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-primary dark:text-secondary border border-border rounded-full transition active:scale-90 cursor-pointer shadow-sm"
+                aria-label="Call support contact"
+              >
+                <Phone className="w-4 h-4" />
+              </button>
             </div>
 
             {/* Central pulsating core buttons */}
@@ -519,18 +531,25 @@ export default function SahoNowContainer() {
             </div>
 
             {/* Actions & Resets */}
-            <div className="flex gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full">
               {aiResponse.breathing && (
                 <button
                   onClick={() => {
                     setBreathingActive(true);
                     setTimerCount(240);
                   }}
-                  className="flex-1 py-3.5 px-4 bg-secondary text-white font-heading font-bold rounded-2xl text-xs flex items-center justify-center gap-1.5 hover:opacity-90 transition active:scale-95 cursor-pointer shadow-sm shadow-secondary/20"
+                  className="py-3.5 px-4 bg-secondary text-white font-heading font-bold rounded-2xl text-xs flex items-center justify-center gap-1.5 hover:opacity-90 transition active:scale-95 cursor-pointer shadow-sm shadow-secondary/20"
                 >
-                  <Wind className="w-4 h-4" /> Start Breathing Guide
+                  <Wind className="w-4 h-4" /> Start Breathing
                 </button>
               )}
+              
+              <button
+                onClick={() => setShowContactsModal(true)}
+                className="py-3.5 px-4 bg-primary text-white font-heading font-bold rounded-2xl text-xs flex items-center justify-center gap-1.5 hover:opacity-90 transition active:scale-95 cursor-pointer shadow-sm shadow-primary/20"
+              >
+                <Phone className="w-4 h-4" /> Reach Out
+              </button>
               
               <button
                 onClick={() => {
@@ -538,12 +557,10 @@ export default function SahoNowContainer() {
                   setBreathingActive(false);
                   if (typeof window !== 'undefined') window.speechSynthesis.cancel();
                 }}
-                className={`py-3.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-foreground font-heading font-bold rounded-2xl text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer ${
-                  aiResponse.breathing ? 'w-24' : 'w-full'
-                }`}
+                className="py-3.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-foreground font-heading font-bold rounded-2xl text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
                 aria-label="Back to main page"
               >
-                <RefreshCw className="w-3.5 h-3.5" /> {aiResponse.breathing ? 'Reset' : 'Return'}
+                <RefreshCw className="w-3.5 h-3.5" /> Return
               </button>
             </div>
           </motion.div>
@@ -565,6 +582,63 @@ export default function SahoNowContainer() {
           <button onClick={() => setErrorMsg('')} className="p-0.5 hover:bg-amber-100/80 rounded-full ml-1">
             <X className="w-3 h-3" />
           </button>
+        </div>
+      )}
+
+      {/* Circle of Safety Reach Out Modal */}
+      {showContactsModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card border border-border rounded-[28px] max-w-sm w-full p-6 space-y-4 shadow-xl text-left"
+          >
+            <div className="flex justify-between items-center pb-2 border-b border-border/40">
+              <h3 className="font-heading font-bold text-base text-primary dark:text-secondary flex items-center gap-1.5">
+                <Phone className="w-4.5 h-4.5" /> Call Support Contact
+              </h3>
+              <button 
+                onClick={() => setShowContactsModal(false)}
+                className="text-xs font-heading font-bold text-rose-500 hover:underline cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <p className="text-xs text-muted-foreground leading-relaxed font-sans">
+              Select a contact from your Circle of Safety support network to dial immediately.
+            </p>
+
+            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+              {contacts.map((contact) => (
+                <button
+                  key={contact.contactId}
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      window.location.href = `tel:${contact.phone}`;
+                    }
+                    setShowContactsModal(false);
+                  }}
+                  className="w-full text-left p-3.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 border border-outline-variant/60 rounded-2xl flex justify-between items-center transition active:scale-[0.98] cursor-pointer"
+                >
+                  <div className="space-y-0.5">
+                    <p className="font-heading font-bold text-sm text-foreground">{contact.name}</p>
+                    <p className="text-[10px] text-muted-foreground font-sans">{contact.relationship} • {contact.phone}</p>
+                  </div>
+                  <Phone className="w-4 h-4 text-secondary fill-secondary/5" />
+                </button>
+              ))}
+
+              {contacts.length === 0 && (
+                <div className="p-5 border border-dashed border-outline-variant rounded-2xl text-center space-y-1">
+                  <p className="text-xs font-bold text-foreground">No contacts configured</p>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed font-sans">
+                    Go to the Profile/Settings (Circle of Safety) tab to add trusted caregiver contacts.
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
         </div>
       )}
 
