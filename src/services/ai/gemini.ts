@@ -302,9 +302,9 @@ JSON Response Contract Schema:
   private static getMockVisionResponse(base64Image: string): VisionAIResponse {
     return {
       confidence: 0.85,
-      identifiedItem: 'Amber Pill Bottle',
+      identifiedItem: 'Amber Pill Bottle (Simulation)',
       isTrigger: true,
-      reason: 'This resembles a medication container or prescription bottle which can trigger urges or represent unknown substances.',
+      reason: 'Pill bottles represent potential relapse triggers. [Note: If you recently configured your .env.local file, you MUST stop your Next.js terminal development server and run "npm run dev" again to load the environment keys into the backend process.]',
       harmReductionAdvice: 'Keep it closed, place it out of sight, and try a 2-minute breathing exercise to ground yourself.',
       professionalVerificationAdvice: 'Consult a pharmacy or licensed physician to identify unknown prescription medicines before use.'
     };
