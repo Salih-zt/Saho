@@ -10,7 +10,7 @@ import { PulseAIResponse } from '../../types';
 import { 
   Mic, AlertCircle, RefreshCw, CheckCircle2, 
   Wind, ShieldAlert, Heart, Volume2, VolumeX, Sparkles, X,
-  Utensils, AlertTriangle, Users, Phone
+  Flame, AlertTriangle, Users, Phone
 } from 'lucide-react';
 
 export default function SahoNowContainer() {
@@ -310,7 +310,7 @@ export default function SahoNowContainer() {
                 onClick={() => handleProcessInput("I'm Craving")}
                 className="bg-card hover:bg-slate-50 dark:hover:bg-slate-800/40 p-5 rounded-[24px] border border-outline-variant/60 shadow-[0px_10px_30px_rgba(26,35,126,0.02)] flex flex-col justify-between h-32 hover:bg-white transition-all active:scale-95 cursor-pointer text-left"
               >
-                <Utensils className="w-8 h-8 text-[#e17e00] stroke-[1.75px]" />
+                <Flame className="w-8 h-8 text-[#e17e00] stroke-[1.75px]" />
                 <span className="font-heading text-sm font-bold text-on-surface">I'm Craving</span>
               </button>
 
