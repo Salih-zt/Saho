@@ -3,38 +3,43 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRecoveryStore } from '../../store/useRecoveryStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { RecoveryService } from '../../services/recoveryService';
 import { PulseAIResponse } from '../../types';
 import { 
-  Mic, MicOff, AlertCircle, RefreshCw, CheckCircle2, 
-  Wind, ShieldAlert, Heart, VolumeX, Volume2 
+  Mic, AlertCircle, RefreshCw, CheckCircle2, 
+  Wind, ShieldAlert, Heart, Volume2, VolumeX, Sparkles, X
 } from 'lucide-react';
 
-const EMOTIONAL_STATES = [
-  { id: 'craving', label: "I'm Craving", color: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/60' },
-  { id: 'panic', label: "I'm Panicking", color: 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border-rose-100 dark:border-rose-900/60' },
-  { id: 'lonely', label: "I'm Lonely", color: 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border-blue-100 dark:border-blue-900/60' },
-  { id: 'sick', label: "I Feel Sick", color: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-100 dark:border-amber-900/60' },
-  { id: 'givingup', label: "I Feel Like Giving Up", color: 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 border-purple-100 dark:border-purple-900/60' }
+const EMOTIONAL_CARDS = [
+  { id: 'craving', label: "I'm Craving", icon: 'cookie', color: 'text-amber-500', bg: 'bg-amber-50/40 dark:bg-amber-950/20' },
+  { id: 'panic', label: "I'm Panicking", icon: 'warning', color: 'text-error', bg: 'bg-rose-50/40 dark:bg-rose-950/20' },
+  { id: 'lonely', label: "I'm Lonely", icon: 'diversity_1', color: 'text-primary dark:text-on-primary-container', bg: 'bg-blue-50/40 dark:bg-blue-950/20' },
 ];
 
 export default function SahoNowContainer() {
   const { currentVoiceSession, setVoiceSession } = useRecoveryStore();
+  const { user } = useAuthStore();
   const { accessibility } = useSettingsStore();
 
   const [emotion, setEmotion] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState<PulseAIResponse | null>(null);
+  
+  // Guided Breathing States
   const [breathingActive, setBreathingActive] = useState(false);
-  const [breathingText, setBreathingText] = useState('Get Ready');
+  const [breathingPhase, setBreathingPhase] = useState(0); // 0: In, 1: Hold, 2: Out, 3: Hold
+  const [timerCount, setTimerCount] = useState(240); // 4 minutes
+  const [waveformHeights, setWaveformHeights] = useState<number[]>([12, 24, 36, 48, 32, 18, 28, 40, 20, 12]);
+  
   const [checkedActions, setCheckedActions] = useState<boolean[]>([false, false, false]);
   const [speechSupported, setSpeechSupported] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   
   const recognitionRef = useRef<any>(null);
 
-  // Check browser Web Speech API support
+  // Initialize Speech recognition
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -58,9 +63,9 @@ export default function SahoNowContainer() {
         rec.onerror = (err: any) => {
           console.error('Speech Recognition Error:', err);
           if (err.error === 'not-allowed') {
-            setErrorMsg('Microphone permission blocked. Please use direct touch selection.');
+            setErrorMsg('Microphone permission blocked. Please use direct cards selection.');
           } else {
-            setErrorMsg('Could not capture audio. Let\'s try direct selection.');
+            setErrorMsg('Could not capture audio. Let\'s use cards selection.');
           }
           setVoiceSession({ listening: false });
         };
@@ -74,26 +79,38 @@ export default function SahoNowContainer() {
     }
   }, [setVoiceSession]);
 
-  // When speech recognition ends and a transcript exists, process it
-  useEffect(() => {
-    if (!currentVoiceSession.listening && currentVoiceSession.transcript && currentVoiceSession.active) {
-      handleProcessInput(emotion || 'Just Speaking', currentVoiceSession.transcript);
-    }
-  }, [currentVoiceSession.listening, currentVoiceSession.transcript]);
-
   // Handle Speech synthesis (Text-to-Speech)
   const speakText = (text: string) => {
     if (!accessibility.textToSpeech || typeof window === 'undefined') return;
-    window.speechSynthesis.cancel(); // Stop any active speech
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.95; // Calm, relaxed pace
+    utterance.rate = 0.95;
     window.speechSynthesis.speak(utterance);
   };
 
-  // Toggle voice recognition session
+  // Simulating sound waves during voice detection
+  useEffect(() => {
+    if (!currentVoiceSession.listening) return;
+
+    const interval = setInterval(() => {
+      setWaveformHeights(prev => 
+        prev.map(() => Math.floor(Math.random() * 40) + 12)
+      );
+    }, 150);
+
+    return () => clearInterval(interval);
+  }, [currentVoiceSession.listening]);
+
+  // When speech ends, run AI
+  useEffect(() => {
+    if (!currentVoiceSession.listening && currentVoiceSession.transcript && currentVoiceSession.active) {
+      handleProcessInput('Voice input', currentVoiceSession.transcript);
+    }
+  }, [currentVoiceSession.listening, currentVoiceSession.transcript]);
+
   const toggleListening = () => {
     if (!speechSupported) {
-      setErrorMsg('Web Speech recognition not supported in this browser. Please use button selections.');
+      setErrorMsg('Speech recognition not supported in this browser. Please use cards.');
       return;
     }
 
@@ -107,45 +124,33 @@ export default function SahoNowContainer() {
       try {
         recognitionRef.current?.start();
       } catch (e) {
-        console.warn('Recognition already started:', e);
+        console.warn('Recognition start exception:', e);
       }
     }
   };
 
-  // Trigger guidance analysis
-  const handleProcessInput = async (selectedEmotion: string, spokeTranscript: string = '') => {
+  const handleProcessInput = async (selected: string, transcript: string = '') => {
     setLoading(true);
     setErrorMsg('');
-    setEmotion(selectedEmotion);
+    setEmotion(selected);
     setVoiceSession({ active: false });
-
-    // Cancel active speech
     if (typeof window !== 'undefined') window.speechSynthesis.cancel();
 
     try {
       const response = await fetch('/api/ai/pulse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          emotion: selectedEmotion,
-          transcript: spokeTranscript,
-        }),
+        body: JSON.stringify({ emotion: selected, transcript }),
       });
 
-      if (!response.ok) {
-        throw new Error('De-escalation endpoint returned an error');
-      }
-
+      if (!response.ok) throw new Error('Response failure');
       const data: PulseAIResponse = await response.json();
       setAiResponse(data);
       setCheckedActions([false, false, false]);
-
-      // Automatically announce the message if Text-To-Speech is toggled
       speakText(data.message);
 
-      // Save session logs in state/db
-      const savedSession = await RecoveryService.saveSession({
-        emotion: selectedEmotion,
+      const saved = await RecoveryService.saveSession({
+        emotion: selected,
         riskLevel: data.risk,
         message: data.message,
         aiActions: data.actions,
@@ -153,25 +158,25 @@ export default function SahoNowContainer() {
         emergencyTriggered: data.emergency,
       });
 
-      // Handle breathing loop trigger
       if (data.breathing) {
         setBreathingActive(true);
+        setTimerCount(240);
       }
 
-      // Handle critical escalation alert
       if (data.emergency) {
-        // Automatic alert to Circle of Safety
-        await RecoveryService.notifyCaregivers(savedSession);
+        await RecoveryService.notifyCaregivers(saved);
       }
 
     } catch (e) {
-      setErrorMsg('Offline fallback triggered. We are here for you.');
-      // Local fallback calculations
-      const mockData = getLocalFallbackResponse(selectedEmotion);
-      setAiResponse(mockData);
+      setErrorMsg('Offline fallback triggered. We are here beside you.');
+      const fallback = getLocalFallbackResponse(selected);
+      setAiResponse(fallback);
       setCheckedActions([false, false, false]);
-      speakText(mockData.message);
-      if (mockData.breathing) setBreathingActive(true);
+      speakText(fallback.message);
+      if (fallback.breathing) {
+        setBreathingActive(true);
+        setTimerCount(240);
+      }
     } finally {
       setLoading(false);
     }
@@ -183,8 +188,8 @@ export default function SahoNowContainer() {
       return {
         risk: 'medium',
         emotion: 'craving',
-        message: 'This craving is temporary. You are stronger than this urge. Take a moment to change your environment and breathe.',
-        actions: ['Walk away from your current environment.', 'Drink a glass of cold water slowly.', 'Do 2 minutes of guided deep breathing.'],
+        message: 'This craving is a temporary wave. You are the observer of it. Take a moment to change your scene and ground your body.',
+        actions: ['Move to a different room or walk outside.', 'Drink a cold glass of water slowly.', 'Do 2 minutes of guided box breathing.'],
         breathing: true,
         emergency: false
       };
@@ -193,8 +198,8 @@ export default function SahoNowContainer() {
       return {
         risk: 'high',
         emotion: 'panic',
-        message: 'You are safe right now in this moment. Focus on my voice and let your shoulders drop. Let\'s breathe together.',
-        actions: ['Loosen any tight clothing and drop your shoulders.', 'Focus on a single object in the room.', 'Inhale deeply as the circle expands.'],
+        message: 'You are completely safe in this exact moment. Let your shoulders drop, relax your hands, and let\'s settle your breath.',
+        actions: ['Drop your shoulders and place feet flat on the floor.', 'Identify three things you can see in the room.', 'Inhale deeply as the circle grows.'],
         breathing: true,
         emergency: false
       };
@@ -202,257 +207,354 @@ export default function SahoNowContainer() {
     return {
       risk: 'low',
       emotion: 'support',
-      message: 'Take things one day, one hour, or even one breath at a time. I am right beside you.',
-      actions: ['Relax your body completely.', 'Text a trusted contact to say hello.', 'Take three deep, mindful breaths.'],
+      message: 'I am right here with you. Together we can get through this, one slow breath at a time.',
+      actions: ['Sip some warm water.', 'Acknowledge your thoughts without judging them.', 'Do a 4-minute box breathing session.'],
       breathing: true,
       emergency: false
     };
   };
 
-  // Breathing loop timer states: 4s inhale, 4s hold, 4s exhale
+  // Breathing Box Cycle Logic: 4s inhale, 4s hold, 4s exhale, 4s hold
   useEffect(() => {
     if (!breathingActive) return;
 
-    let cycle = 0;
-    const instructions = ['Inhale...', 'Hold...', 'Exhale...', 'Hold...'];
-    setBreathingText(instructions[0]);
+    const phases = [
+      { text: 'Breathe in...', scale: 1.4, outerScale: 1.6 },
+      { text: 'Hold...', scale: 1.4, outerScale: 1.7 },
+      { text: 'Breathe out...', scale: 1.0, outerScale: 1.1 },
+      { text: 'Hold...', scale: 1.0, outerScale: 1.0 }
+    ];
 
-    const interval = setInterval(() => {
-      cycle = (cycle + 1) % 4;
-      setBreathingText(instructions[cycle]);
+    const cycleInterval = setInterval(() => {
+      setBreathingPhase(prev => (prev + 1) % 4);
     }, 4000);
 
-    return () => clearInterval(interval);
+    const timerInterval = setInterval(() => {
+      setTimerCount(prev => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => {
+      clearInterval(cycleInterval);
+      clearInterval(timerInterval);
+    };
   }, [breathingActive]);
 
-  // Clean up speech synthesis on unmount
-  useEffect(() => {
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, []);
+  const getPhaseConfig = () => {
+    const phases = [
+      { text: 'Breathe in...', scale: 1.4, outerScale: 1.6, color: 'from-secondary to-primary-container' },
+      { text: 'Hold...', scale: 1.4, outerScale: 1.7, color: 'from-secondary/90 to-primary-container/90' },
+      { text: 'Breathe out...', scale: 1.0, outerScale: 1.1, color: 'from-primary-container to-secondary' },
+      { text: 'Hold...', scale: 1.0, outerScale: 1.0, color: 'from-primary-container/90 to-secondary/90' }
+    ];
+    return phases[breathingPhase];
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const currentPhase = getPhaseConfig();
 
   return (
-    <div className="max-w-md mx-auto w-full px-4 py-6 space-y-6 flex-1 flex flex-col justify-between pb-20">
+    <div className="max-w-[600px] mx-auto w-full px-container-padding py-6 flex-1 flex flex-col justify-between pb-32">
       
-      {/* Header Calm Tagline */}
-      <header className="text-center space-y-1 py-2">
-        <h1 className="text-2xl font-extrabold tracking-tight text-primary dark:text-secondary flex items-center justify-center gap-1.5">
-          <Heart className="w-5 h-5 fill-current text-secondary stroke-none" />
-          <span>SAHO Companion</span>
-        </h1>
-        <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">
-          Your Brother Through Recovery
-        </p>
-      </header>
+      {/* Dynamic Render: Standard Main Landing View */}
+      <AnimatePresence mode="wait">
+        {!currentVoiceSession.listening && !breathingActive && !aiResponse && !loading && (
+          <motion.div
+            key="main-landing"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            className="space-y-md text-center py-6 flex flex-col items-center w-full"
+          >
+            {/* Upper profile header */}
+            <div className="flex items-center space-x-3 self-start mb-4">
+              <div className="w-9 h-9 rounded-full overflow-hidden border border-outline-variant bg-surface-container-high shadow-sm">
+                <img 
+                  className="w-full h-full object-cover" 
+                  alt="Companion guide" 
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHSaDkNnBmHSvXfsTdNYAH8KLC7RuOAQGmxcxYJT_p-RUt3pw-lXQveaPd9nJBq7zKDWanyXB3aS5KQyHwRX9XOFnfNC2jCMqMw3edt_h55F9PceLGNw71tiC4X0Bt0dCiQiZuE6qkAK_SeBMbmTTqeU5zsxgXEW9mzxfrkvtKt78y19qxozZNayqlgMvEFTqmWa6dibZ5AHuTfRWhE89kR0VbphdgTwazaJraXRdFseSPmqk8bHGEgsMoEt2TR06V2kh_uegptA0"
+                />
+              </div>
+              <h2 className="font-heading font-semibold text-lg text-primary dark:text-secondary-fixed">
+                Hello {user?.displayName || 'Friend'}, I'm here.
+              </h2>
+            </div>
 
-      {/* Main Crisis Action Section */}
-      <div className="flex-1 flex flex-col justify-center items-center py-6">
-        <AnimatePresence mode="wait">
-          {!aiResponse && !loading && (
-            <motion.div
-              key="landing"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full flex flex-col items-center space-y-8"
-            >
-              {/* Pulsing Core Action Button */}
+            {/* Central pulsating core buttons */}
+            <div className="relative flex items-center justify-center py-8">
+              {/* Expanding blurred glow auras */}
+              <div className="absolute w-72 h-72 bg-primary/20 dark:bg-primary-container/20 rounded-full blur-3xl aura-animation -z-10" />
+              <div className="absolute w-64 h-64 bg-secondary/15 dark:bg-secondary-container/15 rounded-full blur-2xl aura-animation -z-10" style={{ animationDelay: '-2s' }} />
+
               <button
                 onClick={toggleListening}
-                aria-label={currentVoiceSession.listening ? "Stop Listening" : "Tap to Speak"}
-                className={`relative w-40 h-40 rounded-full flex flex-col justify-center items-center cursor-pointer transition-all duration-300 shadow-xl border-4 ${
-                  currentVoiceSession.listening 
-                    ? 'bg-rose-500 border-rose-400 text-white animate-pulse'
-                    : 'bg-primary dark:bg-primary-light border-slate-200 dark:border-slate-800 text-white hover:scale-105'
-                }`}
+                className="relative z-10 w-60 h-60 rounded-full blue-emerald-gradient shadow-[0px_20px_40px_rgba(26,35,126,0.2)] flex flex-col items-center justify-center text-white hover:scale-105 active:scale-95 transition-transform duration-300 ease-out cursor-pointer border border-white/20"
               >
-                {currentVoiceSession.listening ? (
-                  <>
-                    <MicOff className="w-12 h-12 mb-2" />
-                    <span className="text-xs uppercase font-bold tracking-wider">Listening</span>
-                  </>
-                ) : (
-                  <>
-                    <Mic className="w-12 h-12 mb-2" />
-                    <span className="text-xs uppercase font-bold tracking-wider">SAHO NOW</span>
-                  </>
-                )}
-                
-                {/* Secondary Visual Calming Wave */}
-                {!currentVoiceSession.listening && (
-                  <span className="absolute -inset-2 rounded-full border border-primary/20 dark:border-primary-light/20 animate-ping -z-10" />
-                )}
+                <Mic className="w-12 h-12 mb-2 stroke-[2px]" />
+                <span className="font-heading text-xl font-extrabold tracking-tight">SAHO NOW</span>
+                <span className="text-[11px] text-white/70 mt-1 uppercase tracking-wider font-semibold">Tap to Speak</span>
               </button>
+            </div>
 
-              <div className="text-center px-4">
-                <p className="text-sm text-muted-foreground font-medium">
-                  {currentVoiceSession.listening 
-                    ? '"Tell me what is happening..."' 
-                    : 'Tap the button to talk, or select how you feel below:'}
-                </p>
-              </div>
-
-              {/* Direct Buttons Grid */}
-              <div className="grid grid-cols-2 gap-2 w-full pt-2">
-                {EMOTIONAL_STATES.map((state) => (
+            {/* Touch Selection Cards */}
+            <div className="w-full space-y-2.5 pt-4">
+              <p className="text-xs uppercase font-extrabold tracking-widest text-on-surface-variant/60 text-left px-1">
+                Choose a direct state card:
+              </p>
+              
+              <div className="grid grid-cols-3 gap-3 w-full">
+                {EMOTIONAL_CARDS.map((card) => (
                   <button
-                    key={state.id}
-                    onClick={() => handleProcessInput(state.label)}
-                    className={`py-3.5 px-3 rounded-2xl text-xs font-semibold border text-center transition active:scale-95 cursor-pointer shadow-sm ${state.color}`}
+                    key={card.id}
+                    onClick={() => handleProcessInput(card.label)}
+                    className="glass p-4 rounded-3xl text-center shadow-[0px_10px_30px_rgba(26,35,126,0.02)] flex flex-col items-center justify-center gap-2 border border-white/40 hover:bg-white/60 dark:hover:bg-slate-800 transition active:scale-95 cursor-pointer h-24"
                   >
-                    {state.label}
+                    <span className={`material-symbols-outlined text-[28px] ${card.color}`}>
+                      {card.icon === 'cookie' ? 'cookie' : card.icon === 'warning' ? 'warning' : 'diversity_1'}
+                    </span>
+                    <span className="font-heading text-xs font-bold text-on-surface">{card.label}</span>
                   </button>
                 ))}
               </div>
-            </motion.div>
-          )}
+            </div>
+          </motion.div>
+        )}
 
-          {/* Loading Indicator */}
-          {loading && (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center space-y-4 py-16"
-            >
-              <RefreshCw className="w-10 h-10 text-secondary animate-spin" />
-              <p className="text-sm font-medium text-muted-foreground">Formulating support...</p>
-            </motion.div>
-          )}
+        {/* Dynamic Render: Active Voice Listening Layer */}
+        {currentVoiceSession.listening && (
+          <motion.div
+            key="listening-layer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex-1 flex flex-col justify-between items-center py-8 w-full"
+          >
+            <div className="opacity-45 font-heading font-extrabold tracking-wider text-primary dark:text-secondary-fixed">SAHO</div>
 
-          {/* AI Response Display Card */}
-          {aiResponse && !loading && (
-            <motion.div
-              key="response"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              className="w-full space-y-6"
-            >
-              <div className="bg-card rounded-3xl p-5 border border-border shadow-sm space-y-4 relative overflow-hidden">
-                {/* Emergency Banner */}
-                {aiResponse.emergency && (
-                  <div className="absolute top-0 left-0 right-0 bg-rose-600 text-white text-center py-1.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1">
-                    <ShieldAlert className="w-3.5 h-3.5" /> Emergency Contacts Notified
-                  </div>
-                )}
-
-                {/* Emotion / Risk Header */}
-                <div className={`flex justify-between items-center ${aiResponse.emergency ? 'pt-4' : ''}`}>
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    State: {aiResponse.emotion}
-                  </span>
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide ${
-                    aiResponse.risk === 'high' 
-                      ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400' 
-                      : aiResponse.risk === 'medium'
-                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
-                      : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
-                  }`}>
-                    {aiResponse.risk} risk
-                  </span>
-                </div>
-
-                {/* Empathetic Message */}
-                <p className="text-base md:text-lg leading-relaxed text-foreground font-medium pt-1">
-                  "{aiResponse.message}"
-                </p>
-
-                {/* Actions Checklist */}
-                <div className="space-y-2.5 pt-2">
-                  <p className="text-xs uppercase font-extrabold tracking-wider text-muted-foreground">
-                    Next Actions:
-                  </p>
-                  {aiResponse.actions.map((action, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        const next = [...checkedActions];
-                        next[idx] = !next[idx];
-                        setCheckedActions(next);
-                      }}
-                      className={`flex items-start text-left w-full p-3.5 rounded-2xl border transition active:scale-99 cursor-pointer ${
-                        checkedActions[idx]
-                          ? 'bg-secondary/5 border-secondary/30 text-muted-foreground line-through'
-                          : 'bg-slate-50 dark:bg-slate-800/40 border-border text-foreground hover:border-slate-300 dark:hover:border-slate-700'
-                      }`}
-                    >
-                      <CheckCircle2 className={`w-5 h-5 mr-3 flex-shrink-0 mt-0.5 ${
-                        checkedActions[idx] ? 'text-secondary fill-secondary/10' : 'text-slate-300 dark:text-slate-600'
-                      }`} />
-                      <span className="text-sm font-medium leading-tight">{action}</span>
-                    </button>
-                  ))}
+            <div className="flex flex-col items-center gap-8 w-full">
+              {/* Mic Icon & Pulsing rings */}
+              <div className="relative flex items-center justify-center">
+                <div className="absolute w-44 h-44 rounded-full bg-primary/10 dark:bg-secondary/10 animate-ping" />
+                <div className="relative w-28 h-28 flex items-center justify-center rounded-full bg-primary dark:bg-primary-light shadow-xl text-white">
+                  <Mic className="w-10 h-10 stroke-[2px]" />
                 </div>
               </div>
 
-              {/* Dynamic Breathing Loop View */}
-              {breathingActive && (
-                <div className="bg-card rounded-3xl p-5 border border-border shadow-sm text-center space-y-4">
-                  <div className="flex items-center justify-center space-x-1.5 text-secondary">
-                    <Wind className="w-5 h-5" />
-                    <span className="text-sm font-bold uppercase tracking-wider">Breathing Grounder</span>
-                  </div>
-                  
-                  {/* Calming expanding breathing node */}
-                  <div className="h-32 flex items-center justify-center relative">
-                    <motion.div
-                      animate={accessibility.reducedMotion ? {} : {
-                        scale: breathingText === 'Inhale...' ? 1.4 : breathingText === 'Exhale...' ? 1.0 : 1.4
-                      }}
-                      transition={{ duration: 4, ease: "easeInOut" }}
-                      className="w-24 h-24 rounded-full bg-secondary/15 dark:bg-secondary/10 border border-secondary/35 flex items-center justify-center"
-                    >
-                      <span className="text-sm font-bold text-secondary-dark dark:text-secondary-light">
-                        {breathingText}
-                      </span>
-                    </motion.div>
-                  </div>
+              {/* Listening Headlines */}
+              <div className="text-center space-y-2 px-4">
+                <h1 className="font-heading text-3xl font-extrabold text-primary dark:text-secondary animate-pulse tracking-tight">Listening...</h1>
+                <p className="font-sans text-sm text-on-surface-variant font-medium max-w-[80%] mx-auto leading-relaxed">
+                  Speak freely. I am listening to help guide you safely.
+                </p>
+              </div>
 
-                  <button
-                    onClick={() => {
-                      setBreathingActive(false);
-                      if (typeof window !== 'undefined') window.speechSynthesis.cancel();
-                    }}
-                    className="text-xs font-semibold text-rose-500 hover:text-rose-700 underline cursor-pointer"
-                  >
-                    Close Grounding Exercise
-                  </button>
+              {/* Waveform Equalizer */}
+              <div className="flex items-end justify-center gap-1.5 h-16 w-full max-w-[280px]">
+                {waveformHeights.map((h, i) => (
+                  <div 
+                    key={i}
+                    className="w-1.5 bg-primary dark:bg-secondary rounded-full transition-all duration-150"
+                    style={{ height: `${h}px` }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={toggleListening}
+              className="font-heading text-xs font-bold text-primary dark:text-secondary bg-surface-container-high/40 hover:bg-surface-container-high/85 border border-border px-5 py-2.5 rounded-full transition active:scale-95 cursor-pointer"
+            >
+              Tap to stop
+            </button>
+          </motion.div>
+        )}
+
+        {/* Dynamic Render: Loading screen */}
+        {loading && (
+          <motion.div
+            key="loading-layer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex-grow flex flex-col items-center justify-center space-y-4 py-20"
+          >
+            <RefreshCw className="w-10 h-10 text-secondary animate-spin" />
+            <p className="font-heading text-sm font-bold text-muted-foreground uppercase tracking-widest">Formulating de-escalation...</p>
+          </motion.div>
+        )}
+
+        {/* Dynamic Render: Active Guided Breathing Screen */}
+        {breathingActive && !loading && (
+          <motion.div
+            key="breathing-layer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex-grow flex flex-col justify-between items-center py-6 w-full"
+          >
+            {/* Header Timer info */}
+            <div className="text-center">
+              <h2 className="font-heading text-3xl font-light tracking-tight text-foreground/80">{formatTime(timerCount)}</h2>
+              <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest mt-1">Time Remaining</p>
+            </div>
+
+            {/* The Breathing Core Orb */}
+            <div className="relative flex items-center justify-center py-10">
+              {/* Expanding outer ring */}
+              <motion.div
+                animate={accessibility.reducedMotion ? {} : {
+                  scale: currentPhase.outerScale
+                }}
+                transition={{ duration: 4, ease: 'easeInOut' }}
+                className="absolute w-[280px] h-[280px] rounded-full border border-secondary/20"
+              />
+
+              {/* Core gradient orb */}
+              <motion.div
+                animate={accessibility.reducedMotion ? {} : {
+                  scale: currentPhase.scale
+                }}
+                transition={{ duration: 4, ease: 'easeInOut' }}
+                className={`w-48 h-48 rounded-full bg-gradient-to-tr ${currentPhase.color} flex items-center justify-center shadow-2xl relative border border-white/20`}
+              >
+                <div className="absolute inset-0 rounded-full bg-white/10 blur-xl" />
+                <span className="text-white font-heading text-lg font-bold tracking-tight drop-shadow-md z-10">
+                  {currentPhase.text}
+                </span>
+              </motion.div>
+            </div>
+
+            {/* Bottom Actions */}
+            <div className="text-center space-y-2.5">
+              <button
+                onClick={() => setBreathingActive(false)}
+                className="glass px-6 py-3 rounded-full font-heading text-xs font-bold text-on-background/80 hover:bg-slate-200 dark:hover:bg-slate-800 transition active:scale-95 cursor-pointer"
+              >
+                End Breathing Session
+              </button>
+              <p className="text-[10px] text-muted-foreground/60 uppercase font-semibold">Tap to exit safely</p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Dynamic Render: AI guidance response block */}
+        {aiResponse && !loading && !breathingActive && (
+          <motion.div
+            key="ai-guidance"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            className="w-full space-y-6 py-2"
+          >
+            {/* Header info */}
+            <div className="flex justify-between items-center border-b border-border/40 pb-3">
+              <h3 className="font-heading font-extrabold text-sm text-primary dark:text-secondary-fixed uppercase tracking-wider">
+                Support Guidance
+              </h3>
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                aiResponse.risk === 'high' 
+                  ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400' 
+                  : aiResponse.risk === 'medium'
+                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
+                  : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+              }`}>
+                {aiResponse.risk} risk
+              </span>
+            </div>
+
+            {/* De-escalation Card */}
+            <div className="bg-card border border-border rounded-[24px] shadow-[0px_10px_30px_rgba(26,35,126,0.03)] p-6 space-y-5 relative overflow-hidden">
+              {aiResponse.emergency && (
+                <div className="absolute top-0 left-0 right-0 bg-error text-white text-center py-1.5 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1">
+                  <ShieldAlert className="w-3.5 h-3.5" /> Emergency broadcast dispatch active
                 </div>
               )}
 
-              {/* Reset to talk again */}
+              {/* Empathetic Prompt Message */}
+              <p className="text-lg md:text-xl font-heading font-medium leading-relaxed text-foreground pt-2">
+                "{aiResponse.message}"
+              </p>
+
+              {/* Checklist actions */}
+              <div className="space-y-2.5 pt-3">
+                <p className="text-[11px] uppercase font-extrabold tracking-widest text-muted-foreground/80">
+                  Recommended Sequence:
+                </p>
+                
+                {aiResponse.actions.map((action, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      const next = [...checkedActions];
+                      next[idx] = !next[idx];
+                      setCheckedActions(next);
+                    }}
+                    className={`flex items-start text-left w-full p-4 rounded-2xl border transition duration-200 active:scale-99 cursor-pointer ${
+                      checkedActions[idx]
+                        ? 'bg-secondary/5 border-secondary/30 text-muted-foreground line-through opacity-70'
+                        : 'bg-slate-50 dark:bg-slate-800/40 border-border text-foreground hover:border-slate-300 dark:hover:border-slate-700'
+                    }`}
+                  >
+                    <CheckCircle2 className={`w-5 h-5 mr-3.5 flex-shrink-0 mt-0.5 ${
+                      checkedActions[idx] ? 'text-secondary fill-secondary/10' : 'text-slate-300 dark:text-slate-600'
+                    }`} />
+                    <span className="text-sm font-semibold leading-normal font-sans">{action}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Actions & Resets */}
+            <div className="flex gap-2">
+              {aiResponse.breathing && (
+                <button
+                  onClick={() => {
+                    setBreathingActive(true);
+                    setTimerCount(240);
+                  }}
+                  className="flex-1 py-3.5 px-4 bg-secondary text-white font-heading font-bold rounded-2xl text-xs flex items-center justify-center gap-1.5 hover:opacity-90 transition active:scale-95 cursor-pointer shadow-sm shadow-secondary/20"
+                >
+                  <Wind className="w-4 h-4" /> Start Breathing Guide
+                </button>
+              )}
+              
               <button
                 onClick={() => {
                   setAiResponse(null);
                   setBreathingActive(false);
                   if (typeof window !== 'undefined') window.speechSynthesis.cancel();
                 }}
-                className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-foreground font-semibold rounded-2xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                className={`py-3.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-foreground font-heading font-bold rounded-2xl text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer ${
+                  aiResponse.breathing ? 'w-24' : 'w-full'
+                }`}
+                aria-label="Back to main page"
               >
-                <RefreshCw className="w-3.5 h-3.5" /> Return to Main Screen
+                <RefreshCw className="w-3.5 h-3.5" /> {aiResponse.breathing ? 'Reset' : 'Return'}
               </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Voice Transcript Banner */}
+      {/* Voice Spoken Words Banner */}
       {currentVoiceSession.listening && currentVoiceSession.transcript && (
-        <div className="p-3 bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 text-xs font-medium rounded-xl border border-rose-100 dark:border-rose-900/60 max-w-sm mx-auto w-full text-center">
-          Spoke: "{currentVoiceSession.transcript}"
+        <div className="fixed bottom-24 left-4 right-4 p-3.5 bg-rose-50/90 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 text-xs font-semibold rounded-2xl border border-rose-100 dark:border-rose-900/60 max-w-sm mx-auto text-center shadow-md z-30">
+          Spoken: "{currentVoiceSession.transcript}"
         </div>
       )}
 
-      {/* Error Message */}
+      {/* Direct Error details */}
       {errorMsg && (
-        <div className="p-3 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 text-xs font-medium rounded-xl border border-amber-100 dark:border-amber-900/60 max-w-sm mx-auto w-full flex items-center justify-center gap-1.5">
-          <AlertCircle className="w-4 h-4" />
+        <div className="fixed bottom-24 left-4 right-4 p-3.5 bg-amber-50/90 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 text-xs font-semibold rounded-2xl border border-amber-100/90 dark:border-amber-900/60 max-w-sm mx-auto text-center shadow-md z-30 flex items-center justify-center gap-1.5">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span>{errorMsg}</span>
+          <button onClick={() => setErrorMsg('')} className="p-0.5 hover:bg-amber-100/80 rounded-full ml-1">
+            <X className="w-3 h-3" />
+          </button>
         </div>
       )}
 

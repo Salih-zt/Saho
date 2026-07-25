@@ -12,7 +12,7 @@ import {
 
 export default function CircleOfSafetyContainer() {
   const { theme, toggleTheme, accessibility, updateAccessibility, contacts, addContact, removeContact } = useSettingsStore();
-  const { user, isGuest, logout } = useAuthStore();
+  const { user, isGuest } = useAuthStore();
   
   // Local state for contact form
   const [name, setName] = useState('');
@@ -61,39 +61,39 @@ export default function CircleOfSafetyContainer() {
   };
 
   return (
-    <div className="max-w-md mx-auto w-full px-4 py-6 space-y-8 pb-20">
+    <div className="max-w-[600px] mx-auto w-full px-container-padding py-6 space-y-6 pb-32">
       
       {/* Account Section */}
-      <section className="bg-card rounded-3xl p-5 border border-border shadow-sm space-y-4">
-        <div className="flex items-center space-x-3 text-primary dark:text-secondary">
-          <User className="w-6 h-6 stroke-[2px]" />
-          <h2 className="text-xl font-bold tracking-tight">Recovery Profile</h2>
+      <section className="bg-card rounded-[24px] p-6 border border-outline-variant/60 shadow-[0px_10px_30px_rgba(26,35,126,0.02)] space-y-4">
+        <div className="flex items-center space-x-3 text-primary dark:text-secondary-fixed">
+          <User className="w-5.5 h-5.5 stroke-[2.5px]" />
+          <h2 className="text-lg font-heading font-extrabold tracking-tight">Recovery Profile</h2>
         </div>
         
         {user ? (
-          <div className="space-y-3">
-            <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
-              <p className="text-xs text-muted-foreground">Logged in as</p>
-              <p className="font-semibold text-foreground">{user.displayName || 'Guest User'}</p>
-              {user.email && <p className="text-sm text-muted-foreground">{user.email}</p>}
-              <div className="mt-2 flex items-center space-x-1">
-                <span className={`inline-block w-2.5 h-2.5 rounded-full ${isGuest ? 'bg-amber-400' : 'bg-secondary'}`}></span>
-                <span className="text-xs font-medium text-muted-foreground">
-                  {isGuest ? 'Crisis Guest Mode (Local Sync)' : 'Cloud Synchronized Account'}
+          <div className="space-y-4">
+            <div className="p-4 bg-surface-container-low dark:bg-slate-800/50 rounded-2xl border border-outline-variant/30">
+              <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Logged in as</p>
+              <p className="font-heading font-bold text-base text-foreground mt-0.5">{user.displayName || 'Guest User'}</p>
+              {user.email && <p className="text-sm font-sans text-muted-foreground mt-0.5">{user.email}</p>}
+              <div className="mt-2.5 flex items-center space-x-1.5">
+                <span className={`inline-block w-2 h-2 rounded-full ${isGuest ? 'bg-amber-400' : 'bg-secondary'}`}></span>
+                <span className="text-[11px] font-bold text-muted-foreground">
+                  {isGuest ? 'Crisis Guest Mode' : 'Cloud Synchronized Account'}
                 </span>
               </div>
             </div>
             <button
               onClick={() => AuthService.logout()}
-              className="flex items-center justify-center space-x-2 w-full py-2.5 px-4 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-2xl text-sm font-semibold transition cursor-pointer"
+              className="flex items-center justify-center space-x-2 w-full h-[50px] bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-2xl text-xs font-heading font-bold tracking-wider transition active:scale-98 cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
-              <span>Sign Out Companion</span>
+              <span>SIGN OUT COMPANION</span>
             </button>
           </div>
         ) : (
           <form onSubmit={handleMockLogin} className="space-y-3">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs font-sans text-muted-foreground leading-relaxed">
               Sign in to backup your recovery timeline, or continue as a guest in offline crisis mode.
             </p>
             <div className="space-y-2">
@@ -102,30 +102,30 @@ export default function CircleOfSafetyContainer() {
                 placeholder="Your Name"
                 value={loginName}
                 onChange={(e) => setLoginName(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-border rounded-xl text-sm focus:outline-none"
+                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800 border border-outline-variant rounded-2xl text-sm focus:border-primary dark:focus:border-secondary focus:outline-none transition"
               />
               <input
                 type="email"
                 placeholder="email@example.com"
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-border rounded-xl text-sm focus:outline-none"
+                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800 border border-outline-variant rounded-2xl text-sm focus:border-primary dark:focus:border-secondary focus:outline-none transition"
                 required
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2.5">
               <button
                 type="submit"
-                className="flex-1 py-2.5 px-4 bg-primary dark:bg-primary-light text-white rounded-xl text-sm font-semibold hover:opacity-90 transition cursor-pointer"
+                className="flex-1 h-11 bg-primary text-white rounded-2xl text-xs font-heading font-bold hover:opacity-90 transition active:scale-95 cursor-pointer shadow-sm shadow-primary/10"
               >
-                Sign In
+                SIGN IN
               </button>
               <button
                 type="button"
                 onClick={() => AuthService.signInAsGuest()}
-                className="flex-1 py-2.5 px-4 bg-slate-100 dark:bg-slate-800 text-foreground rounded-xl text-sm font-semibold hover:bg-slate-200 transition cursor-pointer"
+                className="flex-1 h-11 bg-slate-100 dark:bg-slate-800 text-foreground border border-outline-variant/60 rounded-2xl text-xs font-heading font-bold hover:bg-slate-200 transition active:scale-95 cursor-pointer"
               >
-                Guest Access
+                GUEST ACCESS
               </button>
             </div>
             {loginSuccess && (
@@ -138,12 +138,12 @@ export default function CircleOfSafetyContainer() {
       </section>
 
       {/* Circle of Safety Contacts */}
-      <section className="bg-card rounded-3xl p-5 border border-border shadow-sm space-y-4">
-        <div className="flex items-center space-x-3 text-primary dark:text-secondary">
-          <Shield className="w-6 h-6 stroke-[2px]" />
-          <h2 className="text-xl font-bold tracking-tight">Circle of Safety</h2>
+      <section className="bg-card rounded-[24px] p-6 border border-outline-variant/60 shadow-[0px_10px_30px_rgba(26,35,126,0.02)] space-y-4">
+        <div className="flex items-center space-x-3 text-primary dark:text-secondary-fixed">
+          <Shield className="w-5.5 h-5.5 stroke-[2.5px]" />
+          <h2 className="text-lg font-heading font-extrabold tracking-tight">Circle of Safety</h2>
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs font-sans text-muted-foreground leading-relaxed">
           Configure up to 5 trusted caregivers. If you trigger an emergency event, SAHO will immediately dispatch SMS guides to them.
         </p>
 
@@ -152,17 +152,17 @@ export default function CircleOfSafetyContainer() {
           {contacts.map((contact) => (
             <div 
               key={contact.contactId}
-              className="flex justify-between items-center p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-border/60"
+              className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-outline-variant/40"
             >
               <div className="space-y-0.5">
                 <div className="flex items-center space-x-2">
-                  <span className="font-semibold text-sm">{contact.name}</span>
-                  <span className="text-[10px] uppercase font-bold text-secondary bg-secondary/10 px-1.5 py-0.5 rounded">
+                  <span className="font-heading font-bold text-sm text-foreground">{contact.name}</span>
+                  <span className="text-[9px] uppercase font-extrabold text-secondary border border-secondary/20 bg-secondary/5 px-2 py-0.5 rounded-full">
                     {contact.relationship}
                   </span>
                 </div>
-                <div className="flex items-center text-xs text-muted-foreground space-x-1">
-                  <Phone className="w-3 h-3" />
+                <div className="flex items-center text-xs text-muted-foreground space-x-1 font-sans">
+                  <Phone className="w-3 h-3 text-muted-foreground/60" />
                   <span>{contact.phone}</span>
                 </div>
               </div>
@@ -174,13 +174,13 @@ export default function CircleOfSafetyContainer() {
                     const nextEnabled = !contact.emergencyEnabled;
                     useSettingsStore.getState().updateContact({ ...contact, emergencyEnabled: nextEnabled });
                   }}
-                  className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                  className={`px-3 py-1 text-[10px] font-heading font-extrabold rounded-lg transition-colors cursor-pointer border ${
                     contact.emergencyEnabled 
-                      ? 'bg-secondary/10 text-secondary' 
-                      : 'bg-slate-200 dark:bg-slate-700 text-muted-foreground'
+                      ? 'bg-secondary/15 border-secondary/35 text-secondary' 
+                      : 'bg-slate-200 dark:bg-slate-700 border-outline-variant/30 text-muted-foreground'
                   }`}
                 >
-                  {contact.emergencyEnabled ? 'SOS On' : 'SOS Off'}
+                  {contact.emergencyEnabled ? 'SOS ON' : 'SOS OFF'}
                 </button>
                 <button 
                   onClick={() => removeContact(contact.contactId)}
@@ -194,30 +194,30 @@ export default function CircleOfSafetyContainer() {
           ))}
 
           {contacts.length === 0 && (
-            <div className="p-4 border border-dashed border-border rounded-2xl text-center">
-              <HeartHandshake className="w-8 h-8 text-muted-foreground/60 mx-auto mb-1.5" />
-              <p className="text-xs text-muted-foreground">No emergency contacts set. Add one below.</p>
+            <div className="p-5 border border-dashed border-outline-variant rounded-2xl text-center">
+              <HeartHandshake className="w-8 h-8 text-muted-foreground/50 mx-auto mb-1.5" />
+              <p className="text-xs text-muted-foreground font-semibold">No emergency contacts set. Add one below.</p>
             </div>
           )}
         </div>
 
         {/* Add Contact Form */}
         {contacts.length < 5 && (
-          <form onSubmit={handleAddContact} className="pt-2 border-t border-border/65 space-y-2.5">
+          <form onSubmit={handleAddContact} className="pt-3 border-t border-outline-variant/40 space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <input
                 type="text"
                 placeholder="Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-border rounded-xl text-sm focus:outline-none"
+                className="h-10 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-outline-variant rounded-xl text-xs focus:border-primary focus:outline-none"
               />
               <input
                 type="text"
-                placeholder="Relation (e.g. Spouse)"
+                placeholder="Relation (e.g. Brother)"
                 value={relationship}
                 onChange={(e) => setRelationship(e.target.value)}
-                className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-border rounded-xl text-sm focus:outline-none"
+                className="h-10 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-outline-variant rounded-xl text-xs focus:border-primary focus:outline-none"
               />
             </div>
             <div className="flex gap-2">
@@ -226,11 +226,11 @@ export default function CircleOfSafetyContainer() {
                 placeholder="Phone Number"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-border rounded-xl text-sm focus:outline-none"
+                className="flex-1 h-10 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-outline-variant rounded-xl text-xs focus:border-primary focus:outline-none"
               />
               <button
                 type="submit"
-                className="px-4 py-2 bg-secondary text-white rounded-xl text-sm font-semibold flex items-center gap-1 hover:opacity-90 cursor-pointer"
+                className="h-10 px-4 bg-secondary text-white rounded-xl text-xs font-heading font-bold flex items-center gap-1 hover:opacity-90 cursor-pointer shadow-sm shadow-secondary/15"
               >
                 <Plus className="w-4 h-4" /> Add
               </button>
@@ -241,41 +241,41 @@ export default function CircleOfSafetyContainer() {
       </section>
 
       {/* Accessibility Controls */}
-      <section className="bg-card rounded-3xl p-5 border border-border shadow-sm space-y-4">
-        <div className="flex items-center space-x-3 text-primary dark:text-secondary">
-          <Accessibility className="w-6 h-6 stroke-[2px]" />
-          <h2 className="text-xl font-bold tracking-tight">Accessibility Setup</h2>
+      <section className="bg-card rounded-[24px] p-6 border border-outline-variant/60 shadow-[0px_10px_30px_rgba(26,35,126,0.02)] space-y-4">
+        <div className="flex items-center space-x-3 text-primary dark:text-secondary-fixed">
+          <Accessibility className="w-5.5 h-5.5 stroke-[2.5px]" />
+          <h2 className="text-lg font-heading font-extrabold tracking-tight">Accessibility Setup</h2>
         </div>
 
-        <div className="space-y-3.5">
+        <div className="space-y-4">
           {/* Theme selection */}
-          <div className="flex justify-between items-center py-1">
+          <div className="flex justify-between items-center py-0.5">
             <div>
-              <p className="font-semibold text-sm">Visual Theme</p>
-              <p className="text-xs text-muted-foreground">Adjust contrast palette styling.</p>
+              <p className="font-heading font-bold text-sm text-foreground">Visual Palette</p>
+              <p className="text-xs text-muted-foreground font-sans">Adjust contrast styles.</p>
             </div>
             <button
               onClick={toggleTheme}
-              className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 border border-border rounded-xl text-xs font-semibold cursor-pointer"
+              className="h-10 px-4 bg-slate-100 dark:bg-slate-800 border border-outline-variant rounded-xl text-xs font-heading font-bold hover:bg-slate-200 transition cursor-pointer"
             >
               {theme === 'light' ? 'Light Mode' : 'Dark Mode'}
             </button>
           </div>
 
-          <hr className="border-border/50" />
+          <hr className="border-outline-variant/30" />
 
           {/* High Contrast */}
-          <div className="flex justify-between items-center py-1">
-            <div className="flex items-center gap-2.5">
-              <Eye className="w-4.5 h-4.5 text-slate-500" />
+          <div className="flex justify-between items-center py-0.5">
+            <div className="flex items-center gap-3">
+              <Eye className="w-4.5 h-4.5 text-outline" />
               <div>
-                <p className="font-semibold text-sm">High Contrast Mode</p>
-                <p className="text-xs text-muted-foreground">Enhances visual readability.</p>
+                <p className="font-heading font-bold text-sm text-foreground">High Contrast Mode</p>
+                <p className="text-xs text-muted-foreground font-sans">Increases screen legibility.</p>
               </div>
             </div>
             <button
               onClick={() => updateAccessibility({ highContrast: !accessibility.highContrast })}
-              className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 ${
+              className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-250 ${
                 accessibility.highContrast ? 'bg-secondary' : 'bg-slate-300 dark:bg-slate-700'
               }`}
             >
@@ -286,17 +286,17 @@ export default function CircleOfSafetyContainer() {
           </div>
 
           {/* Large Text */}
-          <div className="flex justify-between items-center py-1">
-            <div className="flex items-center gap-2.5">
-              <span className="font-bold text-slate-500 text-xs">AA</span>
+          <div className="flex justify-between items-center py-0.5">
+            <div className="flex items-center gap-3">
+              <span className="font-heading font-extrabold text-outline text-xs">AA</span>
               <div>
-                <p className="font-semibold text-sm">Large Text Size</p>
-                <p className="text-xs text-muted-foreground">Boost typography dimensions.</p>
+                <p className="font-heading font-bold text-sm text-foreground">Large Text Size</p>
+                <p className="text-xs text-muted-foreground font-sans">Magnifies app typography.</p>
               </div>
             </div>
             <button
               onClick={() => updateAccessibility({ largeText: !accessibility.largeText })}
-              className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 ${
+              className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-250 ${
                 accessibility.largeText ? 'bg-secondary' : 'bg-slate-300 dark:bg-slate-700'
               }`}
             >
@@ -307,17 +307,17 @@ export default function CircleOfSafetyContainer() {
           </div>
 
           {/* Text to Speech */}
-          <div className="flex justify-between items-center py-1">
-            <div className="flex items-center gap-2.5">
-              <Volume2 className="w-4.5 h-4.5 text-slate-500" />
+          <div className="flex justify-between items-center py-0.5">
+            <div className="flex items-center gap-3">
+              <Volume2 className="w-4.5 h-4.5 text-outline" />
               <div>
-                <p className="font-semibold text-sm">Auto Narration</p>
-                <p className="text-xs text-muted-foreground">Read cards aloud automatically.</p>
+                <p className="font-heading font-bold text-sm text-foreground">Auto Narration</p>
+                <p className="text-xs text-muted-foreground font-sans">Narrates text descriptions aloud.</p>
               </div>
             </div>
             <button
               onClick={() => updateAccessibility({ textToSpeech: !accessibility.textToSpeech })}
-              className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 ${
+              className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-250 ${
                 accessibility.textToSpeech ? 'bg-secondary' : 'bg-slate-300 dark:bg-slate-700'
               }`}
             >
@@ -328,17 +328,17 @@ export default function CircleOfSafetyContainer() {
           </div>
 
           {/* Reduced Motion */}
-          <div className="flex justify-between items-center py-1">
-            <div className="flex items-center gap-2.5">
-              <MoveHorizontal className="w-4.5 h-4.5 text-slate-500" />
+          <div className="flex justify-between items-center py-0.5">
+            <div className="flex items-center gap-3">
+              <MoveHorizontal className="w-4.5 h-4.5 text-outline" />
               <div>
-                <p className="font-semibold text-sm">Reduce Motion</p>
-                <p className="text-xs text-muted-foreground">Disables flashing transitions.</p>
+                <p className="font-heading font-bold text-sm text-foreground">Reduce Motion</p>
+                <p className="text-xs text-muted-foreground font-sans">Minimizes pulsing screen motions.</p>
               </div>
             </div>
             <button
               onClick={() => updateAccessibility({ reducedMotion: !accessibility.reducedMotion })}
-              className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 ${
+              className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-250 ${
                 accessibility.reducedMotion ? 'bg-secondary' : 'bg-slate-300 dark:bg-slate-700'
               }`}
             >
