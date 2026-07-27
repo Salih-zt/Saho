@@ -191,7 +191,8 @@ export default function SahoNowContainer() {
         emergencyTriggered: data.emergency,
       });
 
-      if (data.emergency) {
+      // Notify caregiver via SMS whenever risk is high OR emergency is flagged
+      if (data.risk === 'high' || data.emergency) {
         await RecoveryService.notifyCaregivers(saved);
       }
 
