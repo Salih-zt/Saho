@@ -193,7 +193,20 @@ export default function SahoNowContainer() {
 
       // Notify caregiver via SMS whenever risk is high OR emergency is flagged
       if (data.risk === 'high' || data.emergency) {
-        await RecoveryService.notifyCaregivers(saved);
+        console.log('[SAHO] High risk detected — dispatching emergency SMS...');
+        try {
+          const result = await RecoveryService.notifyCaregivers(saved);
+          if (result.success) {
+            console.log(`[SAHO] ✅ Emergency SMS sent to: ${result.sentTo.join(', ')}`);
+            setErrorMsg(`📱 Emergency alert sent to ${result.sentTo.join(', ')}.`);
+          } else {
+            console.warn('[SAHO] ⚠️ notifyCaregivers returned success:false — no SOS contacts found or API failed.');
+            setErrorMsg('⚠️ No SOS-enabled contact found. Add one in Circle of Safety.');
+          }
+        } catch (smsErr) {
+          console.error('[SAHO] ❌ SMS dispatch failed:', smsErr);
+          setErrorMsg('⚠️ Emergency alert could not be sent. Check your connection.');
+        }
       }
 
     } catch (e) {
