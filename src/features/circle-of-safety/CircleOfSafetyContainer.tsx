@@ -55,6 +55,15 @@ export default function CircleOfSafetyContainer() {
       return;
     }
 
+    // Normalize to E.164: strip spaces, ensure leading +
+    const rawDigits = phone.replace(/\s+/g, '').trim();
+    const normalizedPhone = rawDigits.startsWith('+') ? rawDigits : `+${rawDigits}`;
+
+    if (normalizedPhone.replace(/\D/g, '').length < 7) {
+      setFormError('Please enter a valid phone number with country code (e.g. +918078782349).');
+      return;
+    }
+
     if (contacts.length >= 5) {
       setFormError('You can configure up to 5 emergency contacts.');
       return;
@@ -64,7 +73,7 @@ export default function CircleOfSafetyContainer() {
       contactId: `contact_${Date.now()}`,
       name,
       relationship,
-      phone,
+      phone: normalizedPhone,
       emergencyEnabled,
     };
 
@@ -76,7 +85,7 @@ export default function CircleOfSafetyContainer() {
       setName('');
       setRelationship('');
       setPhone('');
-    } catch (err: any) {
+    } catch (err: unknown) {
       setFormError('Failed to save contact to database.');
     }
   };
@@ -394,7 +403,7 @@ export default function CircleOfSafetyContainer() {
             <div className="flex gap-2">
               <input
                 type="tel"
-                placeholder="Phone Number"
+                placeholder="Phone with country code (e.g. 918078782349)"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="flex-1 h-10 px-3.5 bg-transparent border border-outline-variant/65 rounded-xl text-xs focus:border-primary focus:outline-none text-foreground"

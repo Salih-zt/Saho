@@ -63,15 +63,26 @@ SAHO says: "${alert.details}"
 
 Please reach out to them immediately. — SAHO Recovery App`;
 
+    /**
+     * Normalize a phone number to E.164 format.
+     * If the number doesn't start with '+', prepend it.
+     */
+    const normalizePhone = (phone: string): string => {
+      const digits = phone.replace(/\s+/g, '').trim();
+      return digits.startsWith('+') ? digits : `+${digits}`;
+    };
+
     // Dispatch SMS to every enabled contact in parallel
     const results = await Promise.allSettled(
-      contacts.map((contact) =>
-        client.messages.create({
+      contacts.map((contact) => {
+        const toNumber = normalizePhone(contact.phone);
+        console.log(`[SAHO SMS] Dispatching to ${contact.name} → ${toNumber}`);
+        return client.messages.create({
           body: smsBody,
           messagingServiceSid,
-          to: contact.phone,
-        })
-      )
+          to: toNumber,
+        });
+      })
     );
 
     const sent: string[] = [];
