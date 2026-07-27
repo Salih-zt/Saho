@@ -49,19 +49,8 @@ export async function POST(request: Request) {
 
     const client = twilio(accountSid, authToken);
 
-    const riskEmoji = alert.risk === 'high' ? '🚨' : alert.risk === 'medium' ? '⚠️' : 'ℹ️';
-
-    const smsBody = 
-`${riskEmoji} SAHO EMERGENCY ALERT
-
-A person in your Circle of Safety needs support right now.
-
-Feeling: ${alert.emotion}
-Risk Level: ${alert.risk.toUpperCase()}
-
-SAHO says: "${alert.details}"
-
-Please reach out to them immediately. — SAHO Recovery App`;
+    // Keep under 160 chars (1 SMS segment) — Indian carriers block multi-segment messages from international numbers
+    const smsBody = `SAHO ALERT: Someone in your Circle of Safety needs help NOW. Risk: ${alert.risk.toUpperCase()}. Feeling: ${alert.emotion}. Please call them immediately.`;
 
     /**
      * Normalize a phone number to E.164 format.
